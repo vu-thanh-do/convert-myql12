@@ -28,10 +28,8 @@ router.post("/create-shop", upload.single("file"), async (req, res, next) => {
       });
       return next(new ErrorHandler("Email đã được sử dụng!", 400));
     }
-
     const filename = req.file.filename;
     const fileUrl = path.join(filename);
-
     const seller = {
       name: req.body.name,
       email: email,
@@ -39,7 +37,6 @@ router.post("/create-shop", upload.single("file"), async (req, res, next) => {
       avatar: fileUrl,
       address: req.body.address,
       phoneNumber: req.body.phoneNumber,
-     
     };
 
     const activationToken = createActivationToken(seller);

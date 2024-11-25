@@ -278,20 +278,20 @@ router.delete(
   isAuthenticated,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const userId = req.user._id;
+      const userId = req.user.id;
       const addressId = req.params.id;
 
       console.log(addressId);
-
-      await User.updateOne(
-        {
-          _id: userId,
-        },
-        { $pull: { addresses: { _id: addressId } } }
+      const user = await User.findByPk(userId);
+      if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+      }
+      const addresses = user.addresses ? JSON.parse(user.addresses) : [];
+      const updatedAddresses = addresses.filter(
+        (address) => address.id !== addressId
       );
-
-      const user = await User.findById(userId);
-
+      user.addresses = JSON.stringify(updatedAddresses);
+      await user.save();
       res.status(200).json({ success: true, user });
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
@@ -305,8 +305,7 @@ router.put(
   isAuthenticated,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const user = await User.findById(req.user.id).select("+password");
-
+      const user = await User.findByPk(req.user.id)
       const isPasswordMatched = await user.comparePassword(
         req.body.oldPassword
       );
@@ -320,10 +319,9 @@ router.put(
           new ErrorHandler("Mật khẩu không khớp với nhau!", 400)
         );
       }
-      user.password = req.body.newPassword;
-
+      const hashedPassword = await bcrypt.hash(req.body.newPassword, 10);
+      user.password = hashedPassword
       await user.save();
-
       res.status(200).json({
         success: true,
         message: "Cập nhật mật khẩu thành công!",
@@ -339,7 +337,7 @@ router.get(
   "/user-info/:id",
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const user = await User.findById(req.params.id);
+      const user = await User.findByPk(req.params.id);
 
       res.status(201).json({
         success: true,
@@ -358,8 +356,7 @@ router.get(
   isAdmin("Admin"),
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const users = await User.find().sort({
-        createdAt: -1,
+      const users = await User.findAll({
       });
       res.status(201).json({
         success: true,
@@ -378,16 +375,13 @@ router.delete(
   isAdmin("Admin"),
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const user = await User.findById(req.params.id);
-
+      const user = await User.findByPk(req.params.id);
       if (!user) {
         return next(
           new ErrorHandler("Người dùng không khả dụng với id này!", 400)
         );
       }
-
-      await User.findByIdAndDelete(req.params.id);
-
+      await user.destroy()
       res.status(201).json({
         success: true,
         message: "Xóa người dùng thành công!",
