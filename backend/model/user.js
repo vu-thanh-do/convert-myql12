@@ -1,5 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
 const User = sequelize.define('User', {
     name: {
@@ -44,5 +46,13 @@ const User = sequelize.define('User', {
     tableName: 'users',
     timestamps: false, 
 });
+
+User.prototype.getJwtToken = function () {
+  return jwt.sign({ id: this.id }, "B2hFTxy%M#WaHgD6$5Wex2o@b*9J7u");
+};
+
+User.prototype.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
 module.exports = User;

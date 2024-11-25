@@ -11,6 +11,7 @@ const sendMail = require("../utils/sendMail");
 const sendToken = require("../utils/jwtToken");
 const { isAuthenticated, isAdmin } = require("../middleware/auth");
 const cloudinary = require('cloudinary')
+const bcrypt = require("bcryptjs");
 
 router.post("/create-user", upload.single("file"), async (req, res, next) => {
   try {
@@ -28,21 +29,16 @@ router.post("/create-user", upload.single("file"), async (req, res, next) => {
       });
       return next(new ErrorHandler("Người dùng đã tồn tại", 400));
     }
-
-    // const filename = req.file.filename;
-    // const fileUrl = path.join(filename);
-
+     const filename = req.file.filename;
+     const fileUrl = path.join(filename);
     const user = {
       name: name,
       email: email,
       password: password,
-      avatar: "x",
+      avatar: fileUrl,
     };
-
     const activationToken = createActivationToken(user);
-
     const activationUrl = `http://localhost:3000/activation/${activationToken}`;
-
     try {
       await sendMail({
         email: user.email,
@@ -67,7 +63,7 @@ router.post("/create-user", upload.single("file"), async (req, res, next) => {
 
 // create activation token
 const createActivationToken = (user) => {
-  return jwt.sign(user, process.env.ACTIVATION_SECRET, {
+  return jwt.sign(user, "B2hFTxy%M#WaHgD6$5Wex2o@b*9J7u", {
     expiresIn: "5m",
   });
 };
@@ -81,16 +77,15 @@ router.post(
 
       const newUser = jwt.verify(
         activation_token,
-        process.env.ACTIVATION_SECRET
+        "B2hFTxy%M#WaHgD6$5Wex2o@b*9J7u"
       );
-
+      
       if (!newUser) {
         return next(new ErrorHandler("Token không hợp lệ", 400));
       }
       const { name, email, password, avatar } = newUser;
-
-      let user = await User.findOne({ email });
-
+      const hashedPassword = await bcrypt.hash(password, 10);
+      let user = await User.findOne({ where: { email } });
       if (user) {
         return next(new ErrorHandler("Người dùng đã tồn tại!", 400));
       }
@@ -98,9 +93,8 @@ router.post(
         name,
         email,
         avatar,
-        password,
+        password :hashedPassword,
       });
-
       sendToken(user, 201, res);
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
@@ -114,31 +108,24 @@ router.post(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { email, password } = req.body;
-
       if (!email || !password) {
         return next(new ErrorHandler("Vui lòng cung cấp tất cả thông tin!", 400));
       }
-
-      const user = await User.findOne({ email }).select("+password");
-
+      const user = await User.findOne({ where: { email } });
       if (!user) {
         return next(new ErrorHandler("Người dùng không tồn tại!", 400));
       }
-
       const isPasswordValid = await user.comparePassword(password);
-
       if (!isPasswordValid) {
-        return next(
-          new ErrorHandler("Vui lòng cung cấp thông tin chính xác!", 400)
-        );
+        return next(new ErrorHandler("Vui lòng cung cấp thông tin chính xác!", 400));
       }
-
-      sendToken(user, 201, res);
+      sendToken(user, 201, res); 
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
   })
 );
+
 
 // load user
 router.get(
@@ -146,7 +133,7 @@ router.get(
   isAuthenticated,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const user = await User.findById(req.user.id);
+      const user = await User.findByPk(req.user.id);
 
       if (!user) {
         return next(new ErrorHandler("Người dùng không tồn tại!", 400));
@@ -188,24 +175,19 @@ router.put(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { email, password, phoneNumber, name } = req.body;
-
-      const user = await User.findOne({ email }).select("+password");
-
+      const user = await User.findOne({ where: { email } });
       if (!user) {
         return next(new ErrorHandler("Không tìm thấy người dùng này!", 400));
       }
-
       const isPasswordValid = await user.comparePassword(password);
-
       if (!isPasswordValid) {
         return next(
           new ErrorHandler("Vui lòng cung cấp thông tin chính xác!", 400)
         );
       }
-
       user.name = name;
       user.email = email;
-      user.phoneNumber = phoneNumber;
+      user.phone_number  = phoneNumber;
 
       await user.save();
 
@@ -226,21 +208,20 @@ router.put(
   upload.single("image"),
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const existsUser = await User.findById(req.user.id);
-
+      const existsUser = await User.findByPk(req.user.id);
+      if (!existsUser) {
+        return next(new ErrorHandler("User not found!", 404));
+      }
       const existAvatarPath = `uploads/${existsUser.avatar}`;
-
-      fs.unlinkSync(existAvatarPath);
-
+      if (fs.existsSync(existAvatarPath)) {
+        fs.unlinkSync(existAvatarPath); 
+      }
       const fileUrl = path.join(req.file.filename);
-
-      const user = await User.findByIdAndUpdate(req.user.id, {
-        avatar: fileUrl,
-      });
-
+      existsUser.avatar = fileUrl;
+      await existsUser.save(); 
       res.status(200).json({
         success: true,
-        user,
+        user: existsUser,
       });
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
@@ -248,14 +229,17 @@ router.put(
   })
 );
 
+
 // update user addresses
 router.put(
   "/update-user-addresses",
   isAuthenticated,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const user = await User.findById(req.user.id);
-
+      const user = await User.findByPk(req.user.id);
+      if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+      }
       const sameTypeAddress = user.addresses.find(
         (address) => address.addressType === req.body.addressType
       );
