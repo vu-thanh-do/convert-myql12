@@ -1,25 +1,23 @@
-const mongoose = require("mongoose");
-
-const withdrawSchema = new mongoose.Schema({
-  seller: {
-    type: Object,
-    required: true,
-  },
-  amount: {
-    type: Number,
-    required: true,
-  },
-  status: {
-    type: String,
-    default: "Processing",
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now(),
-  },
-  updatedAt:{
-    type: Date,
-  }
-});
-
-module.exports = mongoose.model("Withdraw", withdrawSchema);
+module.exports = (sequelize) => {
+  return sequelize.define('Withdraw', {
+      seller: {
+          type: DataTypes.JSON,
+          allowNull: false
+      },
+      amount: {
+          type: DataTypes.DECIMAL(10, 2),
+          allowNull: false
+      },
+      status: {
+          type: DataTypes.STRING,
+          defaultValue: 'Processing'
+      },
+      created_at: {
+          type: DataTypes.DATE,
+          defaultValue: DataTypes.NOW
+      }
+  }, {
+      tableName: 'withdraws',
+      timestamps: false
+  });
+};

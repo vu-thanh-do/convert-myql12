@@ -1,32 +1,33 @@
-const mongoose = require('mongoose');
-
-const coupounCodeSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, 'Please enter your coupoun code name!'],
-        unique: true,
-    },
-    value: {
-        type: Number,
-        required: true,
-    },
-    minAmount: {
-        type: Number,
-    },
-    maxAmount: {
-        type: Number,
-    },
-    shopId: {
-        type: String,
-        required: true,
-    },
-    selectedProduct: {
-        type: String,
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now(),
-    },
-});
-
-module.exports = mongoose.model('CoupounCode', coupounCodeSchema);
+module.exports = (sequelize) => {
+    return sequelize.define('CoupounCode', {
+        name: {
+            type: DataTypes.STRING,
+            unique: true,
+            allowNull: false
+        },
+        value: {
+            type: DataTypes.DECIMAL(10, 2),
+            allowNull: false
+        },
+        min_amount: {
+            type: DataTypes.DECIMAL(10, 2)
+        },
+        max_amount: {
+            type: DataTypes.DECIMAL(10, 2)
+        },
+        shop_id: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        selected_product: {
+            type: DataTypes.STRING
+        },
+        created_at: {
+            type: DataTypes.DATE,
+            defaultValue: DataTypes.NOW
+        }
+    }, {
+        tableName: 'coupoun_codes',
+        timestamps: false
+    });
+};

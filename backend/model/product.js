@@ -1,76 +1,55 @@
-const mongoose = require("mongoose");
-
-const productSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Please enter your product name!"],
-  },
-  description: {
-    type: String,
-    required: [true, "Please enter your product description!"],
-  },
-  category: {
-    type: String,
-    required: [true, "Please enter your product category!"],
-  },
-  tags: {
-    type: String,
-  },
-  originalPrice: {
-    type: Number,
-  },
-  discountPrice: {
-    type: Number,
-    required: [true, "Please enter your product price!"],
-  },
-  stock: {
-    type: Number,
-    required: [true, "Please enter your product stock!"],
-  },
-  images: [
-    {
-      type: String,
-    },
-  ],
-  reviews: [
-    {
-      user: {
-        type: Object,
+module.exports = (sequelize) => {
+  return sequelize.define('Product', {
+      name: {
+          type: DataTypes.STRING,
+          allowNull: false
       },
-      rating: {
-        type: Number,
+      description: {
+          type: DataTypes.TEXT,
+          allowNull: false
       },
-      comment: {
-        type: String,
+      category: {
+          type: DataTypes.STRING,
+          allowNull: false
       },
-      productId: {
-        type: String,
+      tags: {
+          type: DataTypes.STRING
       },
-      createdAt:{
-        type: Date,
-        default: Date.now(),
+      original_price: {
+          type: DataTypes.DECIMAL(10, 2)
+      },
+      discount_price: {
+          type: DataTypes.DECIMAL(10, 2),
+          allowNull: false
+      },
+      stock: {
+          type: DataTypes.INTEGER,
+          allowNull: false
+      },
+      images: {
+          type: DataTypes.JSON
+      },
+      ratings: {
+          type: DataTypes.DECIMAL(3, 2)
+      },
+      shop_id: {
+          type: DataTypes.STRING,
+          allowNull: false
+      },
+      shop: {
+          type: DataTypes.JSON,
+          allowNull: false
+      },
+      sold_out: {
+          type: DataTypes.INTEGER,
+          defaultValue: 0
+      },
+      created_at: {
+          type: DataTypes.DATE,
+          defaultValue: DataTypes.NOW
       }
-    },
-  ],
-  ratings: {
-    type: Number,
-  },
-  shopId: {
-    type: String,
-    required: true,
-  },
-  shop: {
-    type: Object,
-    required: true,
-  },
-  sold_out: {
-    type: Number,
-    default: 0,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now(),
-  },
-});
-
-module.exports = mongoose.model("Product", productSchema);
+  }, {
+      tableName: 'products',
+      timestamps: false
+  });
+};

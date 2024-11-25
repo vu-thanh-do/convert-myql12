@@ -1,48 +1,44 @@
-const mongoose = require("mongoose");
+const { DataTypes } = require('sequelize');
 
-const orderSchema = new mongoose.Schema({
-    cart:{
-        type: Array,
-        required: true,
-    },
-    shippingAddress:{
-        type: Object,
-        required: true,
-    },
-    user:{
-        type: Object,
-        required: true,
-    },
-    totalPrice:{
-        type: Number,
-        required: true,
-    },
-    status:{
-        type: String,
-        default: "Processing",
-    },
-    paymentInfo:{
-        id:{
-            type: String,
+module.exports = (sequelize) => {
+    return sequelize.define('Order', {
+        cart: {
+            type: DataTypes.JSON,
+            allowNull: false
+        },
+        shipping_address: {
+            type: DataTypes.JSON,
+            allowNull: false
+        },
+        user: {
+            type: DataTypes.JSON,
+            allowNull: false
+        },
+        total_price: {
+            type: DataTypes.DECIMAL(10, 2),
+            allowNull: false
         },
         status: {
-            type: String,
+            type: DataTypes.STRING,
+            defaultValue: 'Processing'
         },
-        type:{
-            type: String,
+        payment_info: {
+            type: DataTypes.JSON
         },
-    },
-    paidAt:{
-        type: Date,
-        default: Date.now(),
-    },
-    deliveredAt: {
-        type: Date,
-    },
-    createdAt:{
-        type: Date,
-        default: Date.now(),
-    },
-});
-
-module.exports = mongoose.model("Order", orderSchema);
+        paid_at: {
+            type: DataTypes.DATE,
+            allowNull: true
+        },
+        delivered_at: {
+            type: DataTypes.DATE,
+            allowNull: true
+        },
+        created_at: {
+            type: DataTypes.DATE,
+            defaultValue: DataTypes.NOW
+        }
+    }, {
+        tableName: 'orders',
+        timestamps: false
+    });
+};

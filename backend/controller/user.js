@@ -15,7 +15,7 @@ const cloudinary = require('cloudinary')
 router.post("/create-user", upload.single("file"), async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
-    const userEmail = await User.findOne({ email });
+    const userEmail = await User.findOne({ where:{email}  });
 
     if (userEmail) {
       const filename = req.file.filename;
@@ -29,14 +29,14 @@ router.post("/create-user", upload.single("file"), async (req, res, next) => {
       return next(new ErrorHandler("Người dùng đã tồn tại", 400));
     }
 
-    const filename = req.file.filename;
-    const fileUrl = path.join(filename);
+    // const filename = req.file.filename;
+    // const fileUrl = path.join(filename);
 
     const user = {
       name: name,
       email: email,
       password: password,
-      avatar: fileUrl,
+      avatar: "x",
     };
 
     const activationToken = createActivationToken(user);
@@ -54,10 +54,14 @@ router.post("/create-user", upload.single("file"), async (req, res, next) => {
         message: `Vui lòng kiểm tra Email:- ${user.email} để kích hoạt tài khoản!`,
       });
     } catch (error) {
-      return next(new ErrorHandler(error.message, 500));
+      return res.json({
+        message :error.message,
+      })
     }
   } catch (error) {
-    return next(new ErrorHandler(error.message, 400));
+    return res.json({
+      message :error.message,
+    })
   }
 });
 

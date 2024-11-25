@@ -1,65 +1,64 @@
-const mongoose = require("mongoose");
-
-const eventSchema = new mongoose.Schema({
-    name:{
-        type: String,
-        required:[true,"Please enter your event product name!"],
-    },
-    description:{
-        type: String,
-        required:[true,"Please enter your event product description!"],
-    },
-    category:{
-        type: String,
-        required:[true,"Please enter your event product category!"],
-    },
-    start_Date: {
-        type: Date,
-        required: true,
-      },
-      Finish_Date: {
-        type: Date,
-        required: true,
-      },
-      status: {
-        type: String,
-        default: "Running",
-      },
-    tags:{
-        type: String,
-    },
-    originalPrice:{
-        type: Number,
-    },
-    discountPrice:{
-        type: Number,
-        required: [true,"Please enter your event product price!"],
-    },
-    stock:{
-        type: Number,
-        required: [true,"Please enter your event product stock!"],
-    },
-    images:[
-        {
-            type: String,
+module.exports = (sequelize) => {
+    return sequelize.define('Event', {
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false
         },
-    ],
-    shopId:{
-        type: String,
-        required: true,
-    },
-    shop:{
-        type: Object,
-        required: true,
-    },
-    sold_out:{
-        type: Number,
-        default: 0,
-    },
-    createdAt:{
-        type: Date,
-        default: Date.now(),
-    }
-});
-
-module.exports = mongoose.model("Event", eventSchema);
+        description: {
+            type: DataTypes.TEXT,
+            allowNull: false
+        },
+        category: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        start_date: {
+            type: DataTypes.DATEONLY,
+            allowNull: false
+        },
+        finish_date: {
+            type: DataTypes.DATEONLY,
+            allowNull: false
+        },
+        status: {
+            type: DataTypes.STRING,
+            defaultValue: 'Running'
+        },
+        tags: {
+            type: DataTypes.STRING
+        },
+        original_price: {
+            type: DataTypes.DECIMAL(10, 2)
+        },
+        discount_price: {
+            type: DataTypes.DECIMAL(10, 2),
+            allowNull: false
+        },
+        stock: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+        images: {
+            type: DataTypes.JSON
+        },
+        shop_id: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        shop: {
+            type: DataTypes.JSON,
+            allowNull: false
+        },
+        sold_out: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+        },
+        created_at: {
+            type: DataTypes.DATE,
+            defaultValue: DataTypes.NOW
+        }
+    }, {
+        tableName: 'events',
+        timestamps: false
+    });
+};
