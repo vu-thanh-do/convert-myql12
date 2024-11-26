@@ -22,10 +22,9 @@ exports.isSeller = catchAsyncErrors(async(req,res,next) => {
     if(!seller_token){
         return next(new ErrorHandler("Vui lòng đăng nhập để tiếp tục", 401));
     }
-
     const decoded = jwt.verify(seller_token, "B2hFTxy%M#WaHgD6$5Wex2o@b*9J7u");
 
-    req.seller = await Shop.findById(decoded.id);
+    req.seller = await Shop.findByPk(decoded.id);
 
     next();
 });

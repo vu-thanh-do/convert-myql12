@@ -15,19 +15,18 @@ router.post(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const shopId = req.body.shopId;
-      const shop = await Shop.findById(shopId);
+      const shop = await Shop.findByPk(shopId);
       if (!shop) {
         return next(new ErrorHandler("Id cửa hàng không hợp lệ!", 400));
       } else {
         const files = req.files;
         const imageUrls = files.map((file) => `${file.filename}`);
-
         const eventData = req.body;
+        console.log(eventData.name);
         eventData.images = imageUrls;
         eventData.shop = shop;
 
         const product = await Event.create(eventData);
-
         res.status(201).json({
           success: true,
           product,
@@ -42,7 +41,7 @@ router.post(
 // get all events
 router.get("/get-all-events", async (req, res, next) => {
   try {
-    const events = await Event.find();
+    const events = await Event.findAll({});
     res.status(201).json({
       success: true,
       events,
@@ -57,7 +56,7 @@ router.get(
   "/get-all-events/:id",
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const events = await Event.find({ shopId: req.params.id });
+      const events = await Event.findAll({ where: { shopId: req.params.id } });
 
       res.status(201).json({
         success: true,
@@ -76,9 +75,9 @@ router.delete(
     try {
       const productId = req.params.id;
 
-      const eventData = await Event.findById(productId);
-
-      eventData.images.forEach((imageUrl) => {
+      const eventData = await Event.findByPk(productId);
+      const ImageEvent = JSON.parse(eventData.images)
+      ImageEvent.forEach((imageUrl) => {
         const filename = imageUrl;
         const filePath = `uploads/${filename}`;
 
@@ -89,10 +88,12 @@ router.delete(
         });
       });
 
-      const event = await Event.findByIdAndDelete(productId);
+      const event = await eventData.destroy()
 
       if (!event) {
-        return next(new ErrorHandler("Không tìm thấy sự kiện với id này!", 500));
+        return next(
+          new ErrorHandler("Không tìm thấy sự kiện với id này!", 500)
+        );
       }
 
       res.status(201).json({
@@ -112,9 +113,7 @@ router.get(
   isAdmin("Admin"),
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const events = await Event.find().sort({
-        createdAt: -1,
-      });
+      const events = await Event.findAll({})
       res.status(201).json({
         success: true,
         events,

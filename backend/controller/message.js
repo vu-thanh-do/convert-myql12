@@ -13,7 +13,6 @@ router.post(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const messageData = req.body;
-
       if (req.file) {
         const filename = req.file.filename;
         const fileUrl = path.join(filename);

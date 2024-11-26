@@ -10,13 +10,14 @@ const jwt = require("jsonwebtoken");
 const sendMail = require("../utils/sendMail");
 const sendToken = require("../utils/jwtToken");
 const { isAuthenticated, isAdmin } = require("../middleware/auth");
-const cloudinary = require('cloudinary')
+const cloudinary = require("cloudinary");
 const bcrypt = require("bcryptjs");
 
 router.post("/create-user", upload.single("file"), async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
-    const userEmail = await User.findOne({ where:{email}  });
+    console.log(req.file)
+    const userEmail = await User.findOne({ where: { email } });
 
     if (userEmail) {
       const filename = req.file.filename;
@@ -29,8 +30,8 @@ router.post("/create-user", upload.single("file"), async (req, res, next) => {
       });
       return next(new ErrorHandler("Người dùng đã tồn tại", 400));
     }
-     const filename = req.file.filename;
-     const fileUrl = path.join(filename);
+    const filename = req.file.filename;
+    const fileUrl = path.join(filename);
     const user = {
       name: name,
       email: email,
@@ -51,13 +52,13 @@ router.post("/create-user", upload.single("file"), async (req, res, next) => {
       });
     } catch (error) {
       return res.json({
-        message :error.message,
-      })
+        message: error.message,
+      });
     }
   } catch (error) {
     return res.json({
-      message :error.message,
-    })
+      message: error.message,
+    });
   }
 });
 
@@ -79,7 +80,7 @@ router.post(
         activation_token,
         "B2hFTxy%M#WaHgD6$5Wex2o@b*9J7u"
       );
-      
+
       if (!newUser) {
         return next(new ErrorHandler("Token không hợp lệ", 400));
       }
@@ -93,7 +94,7 @@ router.post(
         name,
         email,
         avatar,
-        password :hashedPassword,
+        password: hashedPassword,
       });
       sendToken(user, 201, res);
     } catch (error) {
@@ -109,7 +110,9 @@ router.post(
     try {
       const { email, password } = req.body;
       if (!email || !password) {
-        return next(new ErrorHandler("Vui lòng cung cấp tất cả thông tin!", 400));
+        return next(
+          new ErrorHandler("Vui lòng cung cấp tất cả thông tin!", 400)
+        );
       }
       const user = await User.findOne({ where: { email } });
       if (!user) {
@@ -117,15 +120,16 @@ router.post(
       }
       const isPasswordValid = await user.comparePassword(password);
       if (!isPasswordValid) {
-        return next(new ErrorHandler("Vui lòng cung cấp thông tin chính xác!", 400));
+        return next(
+          new ErrorHandler("Vui lòng cung cấp thông tin chính xác!", 400)
+        );
       }
-      sendToken(user, 201, res); 
+      sendToken(user, 201, res);
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
   })
 );
-
 
 // load user
 router.get(
@@ -187,7 +191,7 @@ router.put(
       }
       user.name = name;
       user.email = email;
-      user.phone_number  = phoneNumber;
+      user.phone_number = phoneNumber;
 
       await user.save();
 
@@ -214,11 +218,11 @@ router.put(
       }
       const existAvatarPath = `uploads/${existsUser.avatar}`;
       if (fs.existsSync(existAvatarPath)) {
-        fs.unlinkSync(existAvatarPath); 
+        fs.unlinkSync(existAvatarPath);
       }
       const fileUrl = path.join(req.file.filename);
       existsUser.avatar = fileUrl;
-      await existsUser.save(); 
+      await existsUser.save();
       res.status(200).json({
         success: true,
         user: existsUser,
@@ -228,7 +232,6 @@ router.put(
     }
   })
 );
-
 
 // update user addresses
 router.put(
@@ -305,7 +308,7 @@ router.put(
   isAuthenticated,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const user = await User.findByPk(req.user.id)
+      const user = await User.findByPk(req.user.id);
       const isPasswordMatched = await user.comparePassword(
         req.body.oldPassword
       );
@@ -315,12 +318,10 @@ router.put(
       }
 
       if (req.body.newPassword !== req.body.confirmPassword) {
-        return next(
-          new ErrorHandler("Mật khẩu không khớp với nhau!", 400)
-        );
+        return next(new ErrorHandler("Mật khẩu không khớp với nhau!", 400));
       }
       const hashedPassword = await bcrypt.hash(req.body.newPassword, 10);
-      user.password = hashedPassword
+      user.password = hashedPassword;
       await user.save();
       res.status(200).json({
         success: true,
@@ -356,8 +357,7 @@ router.get(
   isAdmin("Admin"),
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const users = await User.findAll({
-      });
+      const users = await User.findAll({});
       res.status(201).json({
         success: true,
         users,
@@ -381,7 +381,7 @@ router.delete(
           new ErrorHandler("Người dùng không khả dụng với id này!", 400)
         );
       }
-      await user.destroy()
+      await user.destroy();
       res.status(201).json({
         success: true,
         message: "Xóa người dùng thành công!",

@@ -11,12 +11,12 @@ const { upload } = require("../multer");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const ErrorHandler = require("../utils/ErrorHandler");
 const sendShopToken = require("../utils/shopToken");
-
+const bcrypt = require("bcryptjs");
 // create shop
 router.post("/create-shop", upload.single("file"), async (req, res, next) => {
   try {
     const { email } = req.body;
-    const sellerEmail = await Shop.findOne({ email });
+    const sellerEmail = await Shop.findOne({ where: { email } });
     if (sellerEmail) {
       const filename = req.file.filename;
       const filePath = `uploads/${filename}`;
@@ -38,11 +38,8 @@ router.post("/create-shop", upload.single("file"), async (req, res, next) => {
       address: req.body.address,
       phoneNumber: req.body.phoneNumber,
     };
-
     const activationToken = createActivationToken(seller);
-
     const activationUrl = `http://localhost:3000/seller/activation/${activationToken}`;
-
     try {
       await sendMail({
         email: seller.email,
@@ -60,14 +57,12 @@ router.post("/create-shop", upload.single("file"), async (req, res, next) => {
     return next(new ErrorHandler(error.message, 400));
   }
 });
-
 // create activation token
 const createActivationToken = (seller) => {
-  return jwt.sign(seller, process.env.ACTIVATION_SECRET, {
+  return jwt.sign(seller, "B2hFTxy%M#WaHgD6$5Wex2o@b*9J7u", {
     expiresIn: "5m",
   });
 };
-
 // activate user
 router.post(
   "/activation",
@@ -77,29 +72,26 @@ router.post(
 
       const newSeller = jwt.verify(
         activation_token,
-        process.env.ACTIVATION_SECRET
+        "B2hFTxy%M#WaHgD6$5Wex2o@b*9J7u"
       );
 
       if (!newSeller) {
         return next(new ErrorHandler("Token không hợp lệ", 400));
       }
-      const { name, email, password, avatar, address, phoneNumber } =
-        newSeller;
+      const { name, email, password, avatar, address, phoneNumber } = newSeller;
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-      let seller = await Shop.findOne({ email });
-
+      let seller = await Shop.findOne({ where: { email } });
       if (seller) {
         return next(new ErrorHandler("Email này đã được sử dụng!", 400));
       }
-
       seller = await Shop.create({
         name,
         email,
         avatar,
-        password,
-       
+        password: hashedPassword,
         address,
-        phoneNumber,
+        phone_number:phoneNumber,
       });
 
       sendShopToken(seller, 201, res);
@@ -115,17 +107,15 @@ router.post(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { email, password } = req.body;
-
       if (!email || !password) {
-        return next(new ErrorHandler("Vui lòng điền đầy đủ thông tin đăng nhập!", 400));
+        return next(
+          new ErrorHandler("Vui lòng điền đầy đủ thông tin đăng nhập!", 400)
+        );
       }
-
-      const user = await Shop.findOne({ email }).select("+password");
-
+      const user = await Shop.findOne({ where: { email } });
       if (!user) {
         return next(new ErrorHandler("Cửa hàng này không tồn tại!", 400));
       }
-
       const isPasswordValid = await user.comparePassword(password);
 
       if (!isPasswordValid) {
@@ -133,7 +123,6 @@ router.post(
           new ErrorHandler("Vui lòng cung cấp thông tin chính xác!", 400)
         );
       }
-
       sendShopToken(user, 201, res);
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
@@ -147,12 +136,10 @@ router.get(
   isSeller,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const seller = await Shop.findById(req.seller._id);
-
+      const seller = await Shop.findByPk(req.seller.id);
       if (!seller) {
         return next(new ErrorHandler("Cửa hàng này không tồn tại!", 400));
       }
-
       res.status(200).json({
         success: true,
         seller,
@@ -187,7 +174,7 @@ router.get(
   "/get-shop-info/:id",
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const shop = await Shop.findById(req.params.id);
+      const shop = await Shop.findByPk(req.params.id);
       res.status(201).json({
         success: true,
         shop,
@@ -235,7 +222,7 @@ router.put(
     try {
       const { name, description, address, phoneNumber } = req.body;
 
-      const shop = await Shop.findOne(req.seller._id);
+      const shop = await Shop.findByPk(req.seller.id);
 
       if (!shop) {
         return next(new ErrorHandler("Cửa hàng này không tìm thấy", 400));
@@ -244,7 +231,7 @@ router.put(
       shop.name = name;
       shop.description = description;
       shop.address = address;
-      shop.phoneNumber = phoneNumber;
+      shop.phone_number = phoneNumber;
       // shop.zipCode = zipCode;
 
       await shop.save();
@@ -266,9 +253,7 @@ router.get(
   isAdmin("Admin"),
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const sellers = await Shop.find().sort({
-        createdAt: -1,
-      });
+      const sellers = await Shop.findAll({});
       res.status(201).json({
         success: true,
         sellers,
@@ -286,16 +271,11 @@ router.delete(
   isAdmin("Admin"),
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const seller = await Shop.findById(req.params.id);
-
+      const seller = await Shop.findByPk(req.params.id);
       if (!seller) {
-        return next(
-          new ErrorHandler("Người bán không có sẵn với id này", 400)
-        );
+        return next(new ErrorHandler("Người bán không có sẵn với id này", 400));
       }
-
-      await Shop.findByIdAndDelete(req.params.id);
-
+      await seller.destroy();
       res.status(201).json({
         success: true,
         message: "Đã xóa cửa hàng này thành công!",
@@ -314,10 +294,8 @@ router.put(
     try {
       const { withdrawMethod } = req.body;
 
-      const seller = await Shop.findByIdAndUpdate(req.seller._id, {
-        withdrawMethod,
-      });
-
+      const seller = await Shop.findByPk(req.seller.id);
+      await seller.update({ withdraw_method:withdrawMethod });
       res.status(201).json({
         success: true,
         seller,
@@ -334,16 +312,14 @@ router.delete(
   isSeller,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const seller = await Shop.findById(req.seller._id);
-
+      const seller = await Shop.findByPk(req.seller.id);
       if (!seller) {
-        return next(new ErrorHandler("Không tìm thấy cừa hàng với id này", 400));
+        return next(
+          new ErrorHandler("Không tìm thấy cừa hàng với id này", 400)
+        );
       }
-
-      seller.withdrawMethod = null;
-
+      seller.withdraw_method = null;
       await seller.save();
-
       res.status(201).json({
         success: true,
         seller,

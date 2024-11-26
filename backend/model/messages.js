@@ -1,5 +1,8 @@
-module.exports = (sequelize) => {
-  return sequelize.define('Message', {
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const Message =  sequelize.define('Message', {
       conversation_id: {
           type: DataTypes.STRING
       },
@@ -24,4 +27,4 @@ module.exports = (sequelize) => {
       tableName: 'messages',
       timestamps: false
   });
-};
+module.exports = Message;

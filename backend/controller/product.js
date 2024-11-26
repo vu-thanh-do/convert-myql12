@@ -15,27 +15,30 @@ router.post(
   upload.array("images"),
   catchAsyncErrors(async (req, res, next) => {
     try {
+      console.log(123);
       const shopId = req.body.shopId;
-      const shop = await Shop.findById(shopId);
+      const shop = await Shop.findByPk(shopId);
+
       if (!shop) {
         return next(new ErrorHandler("Id cửa hàng không hợp lệ!", 400));
       } else {
         const files = req.files;
         const imageUrls = files.map((file) => `${file.filename}`);
-
         const productData = req.body;
         productData.images = imageUrls;
         productData.shop = shop;
-
+        productData.discount_price = 0;
+        productData.shop_id = shopId;
         const product = await Product.create(productData);
-
         res.status(201).json({
           success: true,
           product,
         });
       }
     } catch (error) {
-      return next(new ErrorHandler(error, 400));
+      return res.json({
+        message: error.message,
+      });
     }
   })
 );
@@ -45,7 +48,9 @@ router.get(
   "/get-all-products-shop/:id",
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const products = await Product.find({ shopId: req.params.id });
+      const products = await Product.findAll({
+        where: { shop_id: req.params.id },
+      });
 
       res.status(201).json({
         success: true,
@@ -65,9 +70,9 @@ router.delete(
     try {
       const productId = req.params.id;
 
-      const productData = await Product.findById(productId);
-
-      productData.images.forEach((imageUrl) => {
+      const productData = await Product.findByPk(productId);
+      const imageArr = JSON.parse(productData.images)
+      imageArr.forEach((imageUrl) => {
         const filename = imageUrl;
         const filePath = `uploads/${filename}`;
 
@@ -77,13 +82,12 @@ router.delete(
           }
         });
       });
-
-      const product = await Product.findByIdAndDelete(productId);
-
+      const product = await productData.destroy();
       if (!product) {
-        return next(new ErrorHandler("Không tìm thấy sản phẩm với ID này!", 500));
+        return next(
+          new ErrorHandler("Không tìm thấy sản phẩm với ID này!", 500)
+        );
       }
-
       res.status(201).json({
         success: true,
         message: "Xóa sản phẩm thành công!",
@@ -99,7 +103,7 @@ router.get(
   "/get-all-products",
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const products = await Product.find().sort({ createdAt: -1 });
+      const products = await Product.findAll({})
 
       res.status(201).json({
         success: true,
@@ -119,7 +123,13 @@ router.put(
     try {
       const { user, rating, comment, productId, orderId } = req.body;
 
-      const product = await Product.findById(productId);
+      // Tìm sản phẩm
+      const product = await Product.findByPk(productId);
+
+      // Nếu không tìm thấy sản phẩm, trả về lỗi
+      if (!product) {
+        return next(new ErrorHandler("Sản phẩm không tồn tại!", 404));
+      }
 
       const review = {
         user,
@@ -128,45 +138,40 @@ router.put(
         productId,
       };
 
-      const isReviewed = product.reviews.find(
-        (rev) => rev.user._id === req.user._id
-      );
+      const dataReview = product?.reviews ? JSON.parse(product.reviews) : [];
+      const isReviewed = dataReview.find((rev) => rev.user.id === req.user.id);
 
       if (isReviewed) {
-        product.reviews.forEach((rev) => {
-          if (rev.user._id === req.user._id) {
-            (rev.rating = rating), (rev.comment = comment), (rev.user = user);
+        dataReview.forEach((rev) => {
+          if (rev.user.id === req.user.id) {
+            rev.rating = rating;
+            rev.comment = comment;
+            rev.user = user;
           }
         });
       } else {
-        product.reviews.push(review);
+        dataReview.push(review);
       }
 
       let avg = 0;
-
-      product.reviews.forEach((rev) => {
+      dataReview.forEach((rev) => {
         avg += rev.rating;
       });
 
-      product.ratings = avg / product.reviews.length;
-
+      product.ratings = avg / dataReview.length;
+      product.reviews = dataReview
       await product.save({ validateBeforeSave: false });
-
-      await Order.findByIdAndUpdate(
-        orderId,
-        { $set: { "cart.$[elem].isReviewed": true } },
-        { arrayFilters: [{ "elem._id": productId }], new: true }
-      );
 
       res.status(200).json({
         success: true,
         message: "Đánh giá thành công!",
       });
     } catch (error) {
-      return next(new ErrorHandler(error, 400));
+      return next(new ErrorHandler(error.message, 500));
     }
   })
 );
+
 
 // all products --- for admin
 router.get(
@@ -175,9 +180,7 @@ router.get(
   isAdmin("Admin"),
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const products = await Product.find().sort({
-        createdAt: -1,
-      });
+      const products = await Product.findAll({})
       res.status(201).json({
         success: true,
         products,
