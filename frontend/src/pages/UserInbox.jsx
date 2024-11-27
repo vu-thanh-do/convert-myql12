@@ -47,7 +47,7 @@ const UserInbox = () => {
     useEffect(() => {
         const getConversation = async () => {
             try {
-                const resonse = await axios.get(`${server}/conversation/get-all-conversation-user/${user?._id}`, {
+                const resonse = await axios.get(`${server}/conversation/get-all-conversation-user/${user?.id}`, {
                     withCredentials: true,
                 });
 
@@ -61,7 +61,7 @@ const UserInbox = () => {
 
     useEffect(() => {
         if (user) {
-            const sellerId = user?._id;
+            const sellerId = user?.id;
             socketId.emit('addUser', sellerId);
             socketId.on('getUsers', (data) => {
                 setOnlineUsers(data);
@@ -70,9 +70,9 @@ const UserInbox = () => {
     }, [user]);
 
     const onlineCheck = (chat) => {
-        const chatMembers = chat.members.find((member) => member !== user?._id);
-        const online = onlineUsers.find((user) => user.userId === chatMembers);
-
+        console.log(chat,'chatchatchat')
+        const chatMembers = chat?.members?.find((member) => member !== user?.id);
+        const online = onlineUsers?.find((user) => user?.userId === chatMembers);
         return online ? true : false;
     };
 
@@ -80,7 +80,7 @@ const UserInbox = () => {
     useEffect(() => {
         const getMessage = async () => {
             try {
-                const response = await axios.get(`${server}/message/get-all-messages/${currentChat?._id}`);
+                const response = await axios.get(`${server}/message/get-all-messages/${currentChat?.id}`);
                 setMessages(response.data.messages);
             } catch (error) {
                 console.log(error);
@@ -94,14 +94,14 @@ const UserInbox = () => {
         e.preventDefault();
 
         const message = {
-            sender: user._id,
+            sender: user.id,
             text: newMessage,
-            conversationId: currentChat._id,
+            conversationId: currentChat.id,
         };
-        const receiverId = currentChat.members.find((member) => member !== user?._id);
+        const receiverId = currentChat.members.find((member) => member !== user?.id);
 
         socketId.emit('sendMessage', {
-            senderId: user?._id,
+            senderId: user?.id,
             receiverId,
             text: newMessage,
         });
@@ -126,13 +126,13 @@ const UserInbox = () => {
     const updateLastMessage = async () => {
         socketId.emit('updateLastMessage', {
             lastMessage: newMessage,
-            lastMessageId: user._id,
+            lastMessageId: user.id,
         });
 
         await axios
-            .put(`${server}/conversation/update-last-message/${currentChat._id}`, {
+            .put(`${server}/conversation/update-last-message/${currentChat.id}`, {
                 lastMessage: newMessage,
-                lastMessageId: user._id,
+                lastMessageId: user.id,
             })
             .then((res) => {
                 setNewMessage('');
@@ -152,14 +152,14 @@ const UserInbox = () => {
         const formData = new FormData();
 
         formData.append('images', e);
-        formData.append('sender', user._id);
+        formData.append('sender', user.id);
         formData.append('text', newMessage);
-        formData.append('conversationId', currentChat._id);
+        formData.append('conversationId', currentChat.id);
 
-        const receiverId = currentChat.members.find((member) => member !== user._id);
+        const receiverId = currentChat.members.find((member) => member !== user.id);
 
         socketId.emit('sendMessage', {
-            senderId: user._id,
+            senderId: user.id,
             receiverId,
             images: e,
         });
@@ -182,9 +182,9 @@ const UserInbox = () => {
     };
 
     const updateLastMessageForImage = async () => {
-        await axios.put(`${server}/conversation/update-last-message/${currentChat._id}`, {
+        await axios.put(`${server}/conversation/update-last-message/${currentChat.id}`, {
             lastMessage: 'Photo',
-            lastMessageId: user._id,
+            lastMessageId: user.id,
         });
     };
 
@@ -214,7 +214,7 @@ const UserInbox = () => {
                                 index={index}
                                 setOpen={setOpen}
                                 setCurrentChat={setCurrentChat}
-                                me={user?._id}
+                                me={user?.id}
                                 setUserData={setUserData}
                                 userData={userData}
                                 online={onlineCheck(item)}
@@ -232,7 +232,7 @@ const UserInbox = () => {
           setNewMessage={setNewMessage}
           sendMessageHandler={sendMessageHandler}
           messages={messages}
-          sellerId={user._id}
+          sellerId={user.id}
           userData={userData}
           activeStatus={activeStatus}
           scrollRef={scrollRef}
@@ -250,7 +250,7 @@ const UserInbox = () => {
                                     index={index}
                                     setOpen={setOpen}
                                     setCurrentChat={setCurrentChat}
-                                    me={user?._id}
+                                    me={user?.id}
                                     setUserData={setUserData}
                                     userData={userData}
                                     online={onlineCheck(item)}
@@ -265,7 +265,7 @@ const UserInbox = () => {
                             setNewMessage={setNewMessage}
                             sendMessageHandler={sendMessageHandler}
                             messages={messages}
-                            sellerId={user._id}
+                            sellerId={user.id}
                             userData={userData}
                             activeStatus={activeStatus}
                             scrollRef={scrollRef}
@@ -308,7 +308,7 @@ const MessageList = ({ data, index, setOpen, setCurrentChat, me, setUserData, us
             }  cursor-pointer`}
             onClick={(e) =>
                 setActive(index) ||
-                handleClick(data._id) ||
+                handleClick(data.id) ||
                 setCurrentChat(data) ||
                 setUserData(user) ||
                 setActiveStatus(online)
@@ -325,7 +325,7 @@ const MessageList = ({ data, index, setOpen, setCurrentChat, me, setUserData, us
             <div className="pl-3">
                 <h1 className="text-[18px]">{user?.name}</h1>
                 <p className="text-[16px] text-[#030303cc]">
-                    {data?.lastMessageId !== userData?._id ? 'Bạn:' : userData?.name.split(' ')[0] + ': '}{' '}
+                    {data?.lastMessageId !== userData?.id ? 'Bạn:' : userData?.name.split(' ')[0] + ': '}{' '}
                     {data?.lastMessage}
                 </p>
             </div>

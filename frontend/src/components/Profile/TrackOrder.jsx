@@ -11,10 +11,10 @@ const TrackOrder = () => {
     const { id } = useParams();
 
     useEffect(() => {
-        dispatch(getAllOrdersOfUser(user._id));
+        dispatch(getAllOrdersOfUser(user.id));
     }, [dispatch]);
 
-    const data = orders && orders.find((item) => item._id === id);
+    const data = orders && orders.find((item) => item.id === id);
 
     return (
         <div className="w-full h-[80vh] flex justify-center items-center">

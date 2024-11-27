@@ -28,7 +28,7 @@ router.post(
         productData.images = imageUrls;
         productData.shop = shop;
         productData.discount_price = 0;
-        productData.shop_id = shopId;
+        productData.shopId = shopId;
         const product = await Product.create(productData);
         res.status(201).json({
           success: true,
@@ -49,12 +49,19 @@ router.get(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const products = await Product.findAll({
-        where: { shop_id: req.params.id },
+        where: { shopId: req.params.id },
       });
+      const updatedProducts = products.map(product => {
+        const newProduct = product.toJSON(); 
+        newProduct.images = JSON.parse(newProduct.images);
+        newProduct.shop = JSON.parse(newProduct.shop);
+        newProduct.reviews = JSON.parse(newProduct.reviews);
 
+        return newProduct;
+      });
       res.status(201).json({
         success: true,
-        products,
+        products :updatedProducts, 
       });
     } catch (error) {
       return next(new ErrorHandler(error, 400));
@@ -71,7 +78,7 @@ router.delete(
       const productId = req.params.id;
 
       const productData = await Product.findByPk(productId);
-      const imageArr = JSON.parse(productData.images)
+      const imageArr = JSON.parse(productData.images);
       imageArr.forEach((imageUrl) => {
         const filename = imageUrl;
         const filePath = `uploads/${filename}`;
@@ -103,11 +110,16 @@ router.get(
   "/get-all-products",
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const products = await Product.findAll({})
-
+      const products = await Product.findAll({});
+      const updatedProducts = products.map(product => {
+        const newProduct = product.toJSON(); 
+        newProduct.images = JSON.parse(newProduct.images);
+        newProduct.shop = JSON.parse(newProduct.shop);
+        return newProduct;
+      });
       res.status(201).json({
         success: true,
-        products,
+        products: updatedProducts,
       });
     } catch (error) {
       return next(new ErrorHandler(error, 400));
@@ -159,7 +171,7 @@ router.put(
       });
 
       product.ratings = avg / dataReview.length;
-      product.reviews = dataReview
+      product.reviews = dataReview;
       await product.save({ validateBeforeSave: false });
 
       res.status(200).json({
@@ -172,7 +184,6 @@ router.put(
   })
 );
 
-
 // all products --- for admin
 router.get(
   "/admin-all-products",
@@ -180,7 +191,7 @@ router.get(
   isAdmin("Admin"),
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const products = await Product.findAll({})
+      const products = await Product.findAll({});
       res.status(201).json({
         success: true,
         products,

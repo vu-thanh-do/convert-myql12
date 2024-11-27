@@ -3,6 +3,8 @@ const ErrorHandler = require("../utils/ErrorHandler");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const express = require("express");
 const { isSeller, isAuthenticated } = require("../middleware/auth");
+const sequelize = require("../config/database");
+const { Op } = require("sequelize");
 const router = express.Router();
 
 // create a new conversation
@@ -11,8 +13,10 @@ router.post(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { groupTitle, userId, sellerId } = req.body;
-
-      const isConversationExist = await Conversation.findOne({ groupTitle });
+      console.log(req.body,'req.body')
+      const isConversationExist = await Conversation.findOne({
+        where: { groupTitle: groupTitle },
+      });
 
       if (isConversationExist) {
         const conversation = isConversationExist;
@@ -26,13 +30,15 @@ router.post(
           groupTitle: groupTitle,
         });
 
-        res.status(201).json({
+       return res.status(201).json({
           success: true,
           conversation,
         });
       }
     } catch (error) {
-      return next(new ErrorHandler(error.response.message), 500);
+      return res.json({
+        message  : error.message,
+      })
     }
   })
 );
@@ -40,25 +46,40 @@ router.post(
 // get seller conversations
 router.get(
   "/get-all-conversation-seller/:id",
-  isSeller,
+   isSeller,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const conversations = await Conversation.find({
-        members: {
-          $in: [req.params.id],
-        },
-      }).sort({ updatedAt: -1, createdAt: -1 });
-
-      res.status(201).json({
+      const sellerId = req.params.id;
+      const conversations = await Conversation.findAll({});
+      console.log(sellerId,'sellerId')
+      const filteredConversations = conversations.filter((conversation) => {
+        const membersArray = conversation.members
+        .replace(/[\[\]']+/g, '')  
+        .split(',');     
+        console.log(membersArray,'conversation')
+        return membersArray.includes(sellerId); 
+      });
+      if (filteredConversations.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Không có cuộc trò chuyện nào!',
+        });
+      }
+      const updatedProducts = filteredConversations.map(product => {
+        const newProduct = product.toJSON(); 
+        newProduct.members = JSON.parse(newProduct.members);
+        return newProduct;
+      });
+      res.status(200).json({
         success: true,
-        conversations,
+        conversations: updatedProducts,
       });
     } catch (error) {
-      return next(new ErrorHandler(error), 500);
+      console.error(error);
+      return next(new ErrorHandler(error.message, 500));
     }
   })
 );
-
 
 // get user conversations
 router.get(
@@ -66,15 +87,29 @@ router.get(
   isAuthenticated,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const conversations = await Conversation.find({
-        members: {
-          $in: [req.params.id],
-        },
-      }).sort({ updatedAt: -1, createdAt: -1 });
-
+      const sellerId = req.params.id;
+      const conversations = await Conversation.findAll({});
+      console.log(sellerId,'sellerId')
+      const filteredConversations = conversations.filter((conversation) => {
+        const membersArray = conversation.members
+        .replace(/[\[\]']+/g, '')  
+        .split(',');     
+        return membersArray.includes(sellerId); 
+      });
+      if (filteredConversations.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Không có cuộc trò chuyện nào!',
+        });
+      }
+      const updatedProducts = filteredConversations.map(product => {
+        const newProduct = product.toJSON();
+        newProduct.members = JSON.parse(newProduct.members);
+        return newProduct;
+      });
       res.status(201).json({
         success: true,
-        conversations,
+        conversations : updatedProducts,
       });
     } catch (error) {
       return next(new ErrorHandler(error), 500);
@@ -88,11 +123,16 @@ router.put(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { lastMessage, lastMessageId } = req.body;
+      const conversationId = req.params.id;
 
-      const conversation = await Conversation.findByIdAndUpdate(req.params.id, {
-        lastMessage,
-        lastMessageId,
-      });
+      const conversation = await Conversation.findOne({where :{id :req.params.id}})
+      if (!conversation) {
+        return next(new ErrorHandler("Cuộc trò chuyện không tồn tại!", 404));
+      }
+      conversation.lastMessage = lastMessage;
+      conversation.lastMessageId = lastMessageId;
+
+    await conversation.save();
 
       res.status(201).json({
         success: true,

@@ -35,7 +35,7 @@ router.post(
 
       const withdraw = await Withdraw.create(data);
 
-      const shop = await Shop.findById(req.seller._id);
+      const shop = await Shop.findById(req.seller.id);
 
       shop.availableBalance = shop.availableBalance - amount;
 
@@ -92,7 +92,7 @@ router.put(
       const seller = await Shop.findById(sellerId);
 
       const transection = {
-        _id: withdraw._id,
+        id: withdraw.id,
         amount: withdraw.amount,
         updatedAt: withdraw.updatedAt,
         status: withdraw.status,

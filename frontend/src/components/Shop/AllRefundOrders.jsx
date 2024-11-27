@@ -15,7 +15,7 @@ const AllRefundOrders = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getAllOrdersOfShop(seller._id));
+    dispatch(getAllOrdersOfShop(seller.id));
   }, [dispatch]);
 
   const refundOrders = orders && orders.filter((item) => item.status === "Processing refund"  || item.status === "Refund Success");
@@ -74,7 +74,7 @@ const AllRefundOrders = () => {
   refundOrders &&
   refundOrders.forEach((item) => {
       row.push({
-        id: item._id,
+        id: item.id,
         itemsQty: item.cart.length,
         total:`${currency.format(item.totalPrice, { code: "VND" })}`,
         status: item.status,

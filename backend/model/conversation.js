@@ -3,16 +3,16 @@ const sequelize = require("../config/database");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
  const Conversation = sequelize.define('Conversation', {
-      group_title: {
+    groupTitle: {
           type: DataTypes.STRING
       },
       members: {
           type: DataTypes.JSON
       },
-      last_message: {
+      lastMessage: {
           type: DataTypes.TEXT
       },
-      last_message_id: {
+      lastMessageId: {
           type: DataTypes.STRING
       },
       created_at: {

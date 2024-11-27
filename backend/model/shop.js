@@ -25,7 +25,7 @@ const Shop = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    phone_number: {
+    phoneNumber: {
       type: DataTypes.BIGINT,
       allowNull: false,
     },
@@ -37,13 +37,13 @@ const Shop = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    zip_code: {
+    zipCode: {
       type: DataTypes.INTEGER,
     },
-    withdraw_method: {
+    withdrawMethod: {
       type: DataTypes.JSON,
     },
-    available_balance: {
+    availableBalance: {
       type: DataTypes.DECIMAL(10, 2),
       defaultValue: 0,
     },

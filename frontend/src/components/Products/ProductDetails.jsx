@@ -22,10 +22,10 @@ const ProductDetails = ({ data }) => {
     const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
     const navigate = useNavigate();
     const dispatch = useDispatch();
-
+    console.log(data,'data?.shop')
     useEffect(() => {
-        dispatch(getAllProductsShop(data?.shop._id));
-        setClick(wishlist && wishlist.some((i) => i._id === data?._id));
+        dispatch(getAllProductsShop(data?.shop.id));
+        setClick(wishlist && wishlist.some((i) => i.id === data?.id));
     }, [data, wishlist]);
 
     const incrementCount = () => setCount(count + 1);
@@ -37,7 +37,7 @@ const ProductDetails = ({ data }) => {
     };
 
     const addToCartHandler = () => {
-        if (cart.some((i) => i._id === data._id)) {
+        if (cart.some((i) => i.id === data.id)) {
             toast.error('The product is already in the cart!');
         } else if (data.stock < 1) {
             toast.error(' The product is out of stock!');
@@ -47,9 +47,9 @@ const ProductDetails = ({ data }) => {
         }
     };
 
-    const totalReviewsLength = products?.reduce((acc, product) => acc + product.reviews.length, 0) || 0;
+    const totalReviewsLength = products?.reduce((acc, product) => acc + product?.reviews?.length, 0) || 0;
     const totalRatings =
-        products?.reduce((acc, product) => acc + product.reviews.reduce((sum, review) => sum + review.rating, 0), 0) ||
+        products?.reduce((acc, product) => acc + product?.reviews.reduce((sum, review) => sum + review.rating, 0), 0) ||
         0;
     const averageRating = (totalRatings / totalReviewsLength || 0).toFixed(2);
 
@@ -57,11 +57,11 @@ const ProductDetails = ({ data }) => {
         if (isAuthenticated) {
             try {
                 const res = await axios.post(`${server}/conversation/create-new-conversation`, {
-                    groupTitle: data._id + user._id,
-                    userId: user._id,
-                    sellerId: data.shop._id,
+                    groupTitle: data.id + user.id,
+                    userId: user.id,
+                    sellerId: data.shop.id,
                 });
-                navigate(`/inbox?${res.data.conversation._id}`);
+                navigate(`/inbox?${res.data.conversation.id}`);
             } catch (error) {
                 toast.error(error.response.data.message);
             }
@@ -165,7 +165,7 @@ const ProductDetails = ({ data }) => {
                             </div>
                             {/* Shop and Messaging */}
                             <div className="flex items-center mt-8 space-x-4">
-                                <Link to={`/shop/preview/${data.shop._id}`}>
+                                <Link to={`/shop/preview/${data.shop.id}`}>
                                     <img
                                         src={`${backend_url}${data.shop.avatar}`}
                                         alt="Shop Avatar"
@@ -173,7 +173,7 @@ const ProductDetails = ({ data }) => {
                                     />
                                 </Link>
                                 <div>
-                                    <Link to={`/shop/preview/${data.shop._id}`}>
+                                    <Link to={`/shop/preview/${data.shop.id}`}>
                                         <h3 className="text-xl font-semibold text-orange-600">{data.shop.name}</h3>
                                     </Link>
                                     <p className="text-gray-500 text-sm">({averageRating}/5 ⭐) Reviews</p>
@@ -294,7 +294,7 @@ const ProductDetailsInfo = ({ data, products, totalReviewsLength, averageRating 
             {activeTab === 3 && (
                 <div className="lg:flex lg:space-x-8">
                     <div className="lg:w-1/2">
-                        <Link to={`/shop/preview/${data.shop._id}`}>
+                        <Link to={`/shop/preview/${data.shop.id}`}>
                             <div className="flex items-center space-x-3">
                                 <img
                                     src={`${backend_url}${data.shop.avatar}`}

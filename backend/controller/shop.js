@@ -91,7 +91,7 @@ router.post(
         avatar,
         password: hashedPassword,
         address,
-        phone_number:phoneNumber,
+        phoneNumber:phoneNumber,
       });
 
       sendShopToken(seller, 201, res);
@@ -192,7 +192,7 @@ router.put(
   upload.single("image"),
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const existsUser = await Shop.findById(req.seller._id);
+      const existsUser = await Shop.findById(req.seller.id);
 
       const existAvatarPath = `uploads/${existsUser.avatar}`;
 
@@ -200,7 +200,7 @@ router.put(
 
       const fileUrl = path.join(req.file.filename);
 
-      const seller = await Shop.findByIdAndUpdate(req.seller._id, {
+      const seller = await Shop.findByIdAndUpdate(req.seller.id, {
         avatar: fileUrl,
       });
 
@@ -231,7 +231,7 @@ router.put(
       shop.name = name;
       shop.description = description;
       shop.address = address;
-      shop.phone_number = phoneNumber;
+      shop.phoneNumber = phoneNumber;
       // shop.zipCode = zipCode;
 
       await shop.save();
@@ -295,7 +295,7 @@ router.put(
       const { withdrawMethod } = req.body;
 
       const seller = await Shop.findByPk(req.seller.id);
-      await seller.update({ withdraw_method:withdrawMethod });
+      await seller.update({ withdrawMethod:withdrawMethod });
       res.status(201).json({
         success: true,
         seller,
@@ -318,7 +318,7 @@ router.delete(
           new ErrorHandler("Không tìm thấy cừa hàng với id này", 400)
         );
       }
-      seller.withdraw_method = null;
+      seller.withdrawMethod = null;
       await seller.save();
       res.status(201).json({
         success: true,

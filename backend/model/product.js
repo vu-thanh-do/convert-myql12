@@ -20,7 +20,7 @@ const Product = sequelize.define(
     tags: {
       type: DataTypes.STRING,
     },
-    original_price: {
+    originalPrice: {
       type: DataTypes.DECIMAL(10, 2),
     },
     discount_price: {
@@ -36,12 +36,11 @@ const Product = sequelize.define(
     },
     reviews: {
       type: DataTypes.JSON,
-      defaultValue: []
     },
     ratings: {
       type: DataTypes.DECIMAL(3, 2),
     },
-    shop_id: {
+    shopId: {
       type: DataTypes.STRING,
       allowNull: false,
     },

@@ -17,7 +17,7 @@ const AllEvents = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getAllEventsShop(seller._id));
+    dispatch(getAllEventsShop(seller.id));
   }, [dispatch]);
 
   const handleDelete = (id) => {
@@ -62,6 +62,7 @@ const AllEvents = () => {
           type: 'number',
           sortable: false,
           renderCell: (params) => {
+            console.log(params,'paramsparams')
               const d = params.row.name;
               const product_name = d.replace(/\s+/g, '-');
               return (
@@ -99,7 +100,7 @@ const AllEvents = () => {
   events &&
   events.forEach((item) => {
       row.push({
-        id: item._id,
+        id: item.id,
         name: item.name,
         price: `${currency.format(item.discountPrice, {
           code: "VND",

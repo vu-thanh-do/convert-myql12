@@ -191,7 +191,7 @@ router.put(
       }
       user.name = name;
       user.email = email;
-      user.phone_number = phoneNumber;
+      user.phoneNumber = phoneNumber;
 
       await user.save();
 
@@ -243,7 +243,9 @@ router.put(
       if (!user) {
         return next(new ErrorHandler("User not found", 404));
       }
-      const sameTypeAddress = user.addresses.find(
+      console.log(user)
+      const newAdd = JSON.parse(user.addresses ||'[]')
+      const sameTypeAddress = newAdd.find(
         (address) => address.addressType === req.body.addressType
       );
       if (sameTypeAddress) {
@@ -252,19 +254,18 @@ router.put(
         );
       }
 
-      const existsAddress = user.addresses.find(
-        (address) => address._id === req.body._id
+      const existsAddress = newAdd.find(
+        (address) => address.id === req.body.id
       );
 
       if (existsAddress) {
         Object.assign(existsAddress, req.body);
       } else {
         // add the new address to the array
-        user.addresses.push(req.body);
+        newAdd.push(req.body);
       }
-
+      user.addresses = newAdd
       await user.save();
-
       res.status(200).json({
         success: true,
         user,
@@ -291,9 +292,13 @@ router.delete(
       }
       const addresses = user.addresses ? JSON.parse(user.addresses) : [];
       const updatedAddresses = addresses.filter(
-        (address) => address.id !== addressId
+        (_ , index) => index != addressId
       );
-      user.addresses = JSON.stringify(updatedAddresses);
+      if (updatedAddresses.length === 0) {
+        user.addresses = null;
+      } else {
+        user.addresses = JSON.stringify(updatedAddresses);
+      }
       await user.save();
       res.status(200).json({ success: true, user });
     } catch (error) {

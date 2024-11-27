@@ -276,7 +276,7 @@ const ShippingInfo = ({
             {userInfo && (
                 <div>
                     {user &&
-                        user.addresses.map((item, index) => (
+                        JSON.parse(user.addresses || '[]').map((item, index) => (
                             <div className="w-full flex mt-1">
                                 <input
                                     type="checkbox"

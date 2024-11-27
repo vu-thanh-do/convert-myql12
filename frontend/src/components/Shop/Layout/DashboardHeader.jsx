@@ -33,7 +33,7 @@ const DashboardHeader = () => {
                     <Link to="/dashboard-messages" className="800px:block hidden">
                         <BiMessageSquareDetail color="#fff" size={30} className="mx-5 cursor-pointer" />
                     </Link>
-                    <Link to={`/shop/${seller._id}`}>
+                    <Link to={`/shop/${seller.id}`}>
                         <img
                             src={`${backend_url}${seller.avatar}`}
                             alt=""

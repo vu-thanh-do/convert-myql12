@@ -71,7 +71,7 @@ const Header = ({ activeHeading }) => {
                                     Showing results for "<span className="font-semibold">{searchTerm}</span>"
                                 </p>
                                 {searchData.map((item, index) => (
-                                    <Link to={`/product/${item._id}`} key={index}>
+                                    <Link to={`/product/${item.id}`} key={index}>
                                         <div className="flex items-center px-4 py-2 hover:bg-gray-100 transition-all duration-200">
                                             <img
                                                 src={`${backend_url}${item.images[0]}`}
@@ -186,8 +186,8 @@ const Header = ({ activeHeading }) => {
                                 <div className="mt-2 bg-white rounded-lg shadow-md overflow-hidden">
                                     {searchData.map((item) => (
                                         <Link
-                                            key={item._id}
-                                            to={`/product/${item._id}`}
+                                            key={item.id}
+                                            to={`/product/${item.id}`}
                                             className="block p-2 hover:bg-gray-100"
                                         >
                                             <img

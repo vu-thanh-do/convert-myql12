@@ -12,6 +12,8 @@ import { toast } from 'react-toastify';
 import Ratings from '../../Products/Ratings';
 
 const ProductCard = ({ data, isEvent }) => {
+    const dataShop = data.shop
+    const imageArr = data.images
     const { wishlist } = useSelector((state) => state.wishlist);
     const { cart } = useSelector((state) => state.cart);
     const [click, setClick] = useState(false);
@@ -19,7 +21,7 @@ const ProductCard = ({ data, isEvent }) => {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        if (wishlist && wishlist.find((i) => i._id === data._id)) {
+        if (wishlist && wishlist.find((i) => i.id === data.id)) {
             setClick(true);
         } else {
             setClick(false);
@@ -39,7 +41,7 @@ const ProductCard = ({ data, isEvent }) => {
     };
 
     const addToCartHandler = (id) => {
-        const isItemExists = cart && cart.find((i) => i._id === id);
+        const isItemExists = cart && cart.find((i) => i.id === id);
         if (isItemExists) {
             toast.error('The product is already in the cart!');
         } else {
@@ -56,23 +58,23 @@ const ProductCard = ({ data, isEvent }) => {
     return (
         <div className="w-full h-[370px] bg-white rounded-lg shadow-md p-4 relative cursor-pointer hover:shadow-lg transition-all duration-300">
             {/* Image Section */}
-            <Link to={`${isEvent === true ? `/product/${data._id}?isEvent=true` : `/product/${data._id}`}`}>
+            <Link to={`${isEvent === true ? `/product/${data.id}?isEvent=true` : `/product/${data.id}`}`}>
                 <img
-                    src={`${backend_url}${data.images && data.images[0]}`}
+                    src={`${backend_url}${imageArr && imageArr[0]}`}
                     alt={data.name}
                     className="w-auto h-[150px] object-contain mx-auto rounded-md hover:scale-105 transition-transform duration-300"
                 />
             </Link>
 
             {/* Shop Name */}
-            <Link to={`/shop/preview/${data?.shop._id}`}>
+            <Link to={`/shop/preview/${dataShop.id}`}>
                 <h5 className={`${styles.shop_name} text-center mt-2`}>
-                    {data.shop.name.length > 20 ? `${data.shop.name.slice(0, 20)}...` : data.shop.name}
+                    {dataShop?.name?.length > 20 ? `${dataShop.name.slice(0, 20)}...` : dataShop?.name}
                 </h5>
             </Link>
 
             {/* Product Name */}
-            <Link to={`${isEvent === true ? `/product/${data._id}?isEvent=true` : `/product/${data._id}`}`}>
+            <Link to={`${isEvent === true ? `/product/${data.id}?isEvent=true` : `/product/${data.id}`}`}>
                 <h4 className="font-semibold text-gray-800 text-center mt-2">
                     {data.name.length > 35 ? `${data.name.slice(0, 35)}...` : data.name}
                 </h4>
@@ -126,7 +128,7 @@ const ProductCard = ({ data, isEvent }) => {
                 <AiOutlineShoppingCart
                     size={25}
                     className="text-gray-700 hover:scale-110 hover:text-green-500 transition"
-                    onClick={() => addToCartHandler(data._id)}
+                    onClick={() => addToCartHandler(data.id)}
                     title="Add to cart"
                 />
             </div>

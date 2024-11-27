@@ -42,9 +42,15 @@ router.post(
 router.get("/get-all-events", async (req, res, next) => {
   try {
     const events = await Event.findAll({});
+    const updatedProducts = events.map(product => {
+      const newProduct = product.toJSON(); 
+      newProduct.images = JSON.parse(newProduct.images);
+      newProduct.shop = JSON.parse(newProduct.shop);
+      return newProduct;
+    });
     res.status(201).json({
       success: true,
-      events,
+      events :updatedProducts,
     });
   } catch (error) {
     return next(new ErrorHandler(error, 400));
@@ -57,10 +63,15 @@ router.get(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const events = await Event.findAll({ where: { shopId: req.params.id } });
-
+      const updatedProducts = events.map(product => {
+        const newProduct = product.toJSON(); 
+        newProduct.images = JSON.parse(newProduct.images);
+        newProduct.shop = JSON.parse(newProduct.shop);
+        return newProduct;
+      });
       res.status(201).json({
         success: true,
-        events,
+        events :updatedProducts,
       });
     } catch (error) {
       return next(new ErrorHandler(error, 400));

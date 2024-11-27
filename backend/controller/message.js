@@ -47,13 +47,17 @@ router.get(
   "/get-all-messages/:id",
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const messages = await Messages.find({
-        conversationId: req.params.id,
+      const messages = await Messages.findAll({
+       where:{ conversationId: req.params.id},
       });
-
+      const updatedProducts = messages.map(product => {
+        const newProduct = product.toJSON();
+        newProduct.members = JSON.parse(newProduct.members);
+        return newProduct;
+      });
       res.status(201).json({
         success: true,
-        messages,
+        messages :updatedProducts,
       });
     } catch (error) {
       return next(new ErrorHandler(error.message), 500);

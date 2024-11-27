@@ -3,7 +3,7 @@ const sequelize = require("../config/database");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const Message =  sequelize.define('Message', {
-      conversation_id: {
+    conversationId: {
           type: DataTypes.STRING
       },
       text: {

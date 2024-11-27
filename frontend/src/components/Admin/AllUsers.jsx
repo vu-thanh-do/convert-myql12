@@ -84,11 +84,11 @@ const AllUsers = () => {
     users &&
         users.forEach((item) => {
             row.push({
-                id: item._id,
+                id: item.id,
                 name: item.name,
                 email: item.email,
                 role: item.role,
-                joinedAt: item.createdAt.slice(0, 10),
+                joinedAt: item?.createdAt?.slice(0, 10),
             });
         });
 

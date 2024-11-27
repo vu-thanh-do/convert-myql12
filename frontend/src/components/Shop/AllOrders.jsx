@@ -15,7 +15,7 @@ const AllOrders = () => {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(getAllOrdersOfShop(seller._id));
+        dispatch(getAllOrdersOfShop(seller.id));
     }, [dispatch]);
 
     const columns = [
@@ -72,7 +72,7 @@ const AllOrders = () => {
     orders &&
         orders.forEach((item) => {
             row.push({
-                id: item._id,
+                id: item.id,
                 itemsQty: item.cart.length,
                 total: `${currency.format(item.totalPrice, { code: 'VND' })}`,
                 status: item.status,

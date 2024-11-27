@@ -73,9 +73,22 @@ router.get(
       const orders = await Order.findAll({
         "cart.shopId": req.params.shopId,
       })
+      const updatedProducts = orders.map(product => {
+     
+        const newProduct = product.toJSON(); 
+        console.log( JSON.parse(newProduct.user),'newProduct')
+        newProduct.cart = JSON.parse(newProduct.cart);
+        newProduct.shipping_address = JSON.parse(newProduct.shipping_address);
+        // newProduct.shippingAddress = JSON.parse(newProduct.shipping_address);
+        newProduct.user = JSON.parse(newProduct.user);
+        newProduct.paymentInfo = JSON.parse(newProduct.paymentInfo);
+
+        return newProduct;
+      });
+      console.log(updatedProducts,'updatedProducts')
       res.status(200).json({
         success: true,
-        orders,
+        orders :updatedProducts,
       });
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
@@ -99,7 +112,7 @@ router.put(
       if (req.body.status === "Transferred to delivery partner") {
         const cartDataOrder = JSON.parse(order.cart) || '[]'
         cartDataOrder.forEach(async (o) => {
-          await updateOrder(o._id, o.qty);
+          await updateOrder(o.id, o.qty);
         });
       }
 
@@ -216,9 +229,19 @@ router.get(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const orders = await Order.findAll({})
+      const updatedProducts = orders.map(product => {
+        const newProduct = product.toJSON(); 
+        newProduct.cart = JSON.parse(newProduct.cart);
+        newProduct.shipping_address = JSON.parse(newProduct.shipping_address);
+        // newProduct.shippingAddress = JSON.parse(newProduct.shipping_address);
+        newProduct.user = JSON.parse(newProduct.user);
+        newProduct.paymentInfo = JSON.parse(newProduct.paymentInfo);
+
+        return newProduct;
+      });
       res.status(201).json({
         success: true,
-        orders,
+        orders :updatedProducts,
       });
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));

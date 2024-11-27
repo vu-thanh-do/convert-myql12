@@ -35,12 +35,12 @@ const ShopInfo = ({ isOwner }) => {
         });
         window.location.reload();
     };
-
-    const totalReviewsLength = products && products.reduce((acc, product) => acc + product.reviews.length, 0);
+    console.log(products,'productsproductsproducts')
+    const totalReviewsLength = products && products.reviews && products?.reduce((acc, product) => acc + product?.reviews?.length, 0);
 
     const totalRatings =
-        products &&
-        products.reduce((acc, product) => acc + product.reviews.reduce((sum, review) => sum + review.rating, 0), 0);
+        products &&products.reviews &&
+        products?.reduce((acc, product) => acc + product?.reviews.reduce((sum, review) => sum + review.rating, 0), 0);
 
     const averageRating = totalRatings / totalReviewsLength || 0;
 

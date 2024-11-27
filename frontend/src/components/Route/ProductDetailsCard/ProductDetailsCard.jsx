@@ -18,7 +18,7 @@ const ProductDetailsCard = ({ setOpen, data }) => {
     const [click, setClick] = useState(false);
 
     useEffect(() => {
-        setClick(wishlist.some((item) => item._id === data?._id));
+        setClick(wishlist.some((item) => item.id === data?.id));
     }, [wishlist, data]);
 
     const decrementCount = () => count > 1 && setCount(count - 1);
@@ -29,13 +29,13 @@ const ProductDetailsCard = ({ setOpen, data }) => {
         click ? dispatch(removeFromWishlist(data)) : dispatch(addToWishlist(data));
     };
 
-    const totalReviewsLength = products?.reduce((acc, product) => acc + product.reviews.length, 0) || 0;
+    const totalReviewsLength = products?.reduce((acc, product) => acc + product?.reviews?.length, 0) || 0;
     const totalRatings =
         products?.reduce((acc, product) => acc + product.reviews.reduce((sum, review) => sum + review.rating, 0), 0) ||
         0;
     const averageRating = (totalRatings / totalReviewsLength || 0).toFixed(2);
     const addToCartHandler = () => {
-        if (cart.some((item) => item._id === data._id)) {
+        if (cart.some((item) => item.id === data.id)) {
             toast.error('The product is already in the cart!');
         } else if (data.stock < 1) {
             toast.error('The product is out of stock!');
@@ -90,7 +90,7 @@ const ProductDetailsCard = ({ setOpen, data }) => {
                                     {data.description.length > 200 ? (
                                         <>
                                             {data.description.slice(0, 200)}...
-                                            <Link to={`/product/${data._id}`}>
+                                            <Link to={`/product/${data.id}`}>
                                                 <span className="text-blue-500 ml-1 cursor-pointer">
                                                     Click to see more
                                                 </span>
@@ -149,7 +149,7 @@ const ProductDetailsCard = ({ setOpen, data }) => {
                                         className="w-12 h-12 rounded-full border border-gray-300"
                                     />
                                     <div>
-                                        <Link to={`/shop/preview/${data.shop._id}`}>
+                                        <Link to={`/shop/preview/${data.shop.id}`}>
                                             <h3 className="text-lg font-semibold text-blue-600">{data.shop.name}</h3>
                                         </Link>
                                         <p className="text-gray-500 text-sm">({averageRating}/5 ⭐) Reviews</p>

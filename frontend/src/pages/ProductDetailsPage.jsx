@@ -13,13 +13,14 @@ const ProductDetailsPage = () => {
     const [data, setData] = useState(null);
     const [searchParams] = useSearchParams();
     const eventData = searchParams.get('isEvent');
-
+    console.log(id,'id')
     useEffect(() => {
         if (eventData !== null) {
-            const data = allEvents && allEvents.find((i) => i._id === id);
+            const data = allEvents && allEvents.find((i) => Number(i.id) == Number(id));
             setData(data);
         } else {
-            const data = allProducts && allProducts.find((i) => i._id === id);
+            const data = allProducts && allProducts.find((i) => Number(i.id) == Number(id));
+            console.log(data,'cc')
             setData(data);
         }
     }, [allProducts, allEvents]);

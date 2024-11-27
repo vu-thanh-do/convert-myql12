@@ -16,7 +16,7 @@ const AllProducts = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getAllProductsShop(seller._id));
+    dispatch(getAllProductsShop(seller.id));
   }, [dispatch]);
 
   const handleDelete = (id) => {
@@ -96,7 +96,7 @@ const AllProducts = () => {
   products &&
     products.forEach((item) => {
       row.push({
-        id: item._id,
+        id: item.id,
         name: item.name,
         price:`${currency.format(item.discountPrice, {
           code: "VND",

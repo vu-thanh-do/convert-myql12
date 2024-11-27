@@ -17,7 +17,7 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    phone_number: {
+    phoneNumber: {
         type: DataTypes.BIGINT,
     },
     addresses: {
