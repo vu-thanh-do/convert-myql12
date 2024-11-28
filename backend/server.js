@@ -14,7 +14,7 @@ sequelize
   .authenticate()
   .then(() => {
     console.log("MySQL connected...");
-    // return sequelize.sync({ alter: true })
+  //  return sequelize.sync({ alter: true })
   })
   .then(() => {
     console.log("All models synchronized successfully.");
