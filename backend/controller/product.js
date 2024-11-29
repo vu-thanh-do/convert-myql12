@@ -94,9 +94,9 @@ router.get(
         newProduct.images = JSON.parse(newProduct.images);
         newProduct.shop = JSON.parse(newProduct.shop);
         newProduct.reviews = JSON.parse(newProduct.reviews);
-        
         return newProduct;
       });
+      
       res.status(201).json({
         success: true,
         products :updatedProducts, 
@@ -189,7 +189,7 @@ router.put(
       };
 
       const dataReview = product?.reviews ? JSON.parse(product.reviews) : [];
-      const isReviewed = dataReview.find((rev) => rev.user.id === req.user.id);
+      const isReviewed = dataReview.find((rev) => rev.user.id == req.user.id);
 
       if (isReviewed) {
         dataReview.forEach((rev) => {

@@ -23,7 +23,7 @@ const UserOrderDetails = () => {
 
     useEffect(() => {
         dispatch(getAllOrdersOfUser(user.id));
-    }, [dispatch]);
+    }, [dispatch,user.id]);
 
     const data = orders && orders.find((item) => item.id == id);
     console.log(data,'data?.id')
