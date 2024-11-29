@@ -110,6 +110,7 @@ const AllProducts = () => {
       type: "number",
       sortable: false,
       renderCell: (params) => {
+        console.log(params.id)
         return (
           <>
             <Link to={`/product/${params.id}`}>
@@ -157,6 +158,7 @@ const AllProducts = () => {
         sold: item?.sold_out,
       });
     });
+    console.log(row,'rowrow')
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -179,6 +181,8 @@ const AllProducts = () => {
       newForm,
       { headers: { "Content-Type": "multipart/form-data" } }
     );
+    dispatch(getAllProductsShop(seller.id))
+    handleClose()
   };
   const handleImageChange = (e) => {
     e.preventDefault();

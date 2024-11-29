@@ -75,14 +75,28 @@ router.put(
   })
 );
 // get all events
+function isValidJSON(str) {
+  try {
+    JSON.parse(str);
+    return true; // Nếu không có lỗi, chuỗi là JSON hợp lệ
+  } catch (e) {
+    return false; // Nếu có lỗi, chuỗi không hợp lệ
+  }
+}
 router.get("/get-all-events", async (req, res, next) => {
   try {
     const events = await Event.findAll({});
     const updatedProducts = events.map((product) => {
       const newProduct = product.toJSON();
-      newProduct.images = JSON.parse(newProduct.images);
-      newProduct.shop = JSON.parse(newProduct.shop);
-      newProduct.tags = JSON.parse(newProduct.tags);
+      if (typeof newProduct.images === 'string' && isValidJSON(newProduct.images)) {
+        newProduct.images = JSON.parse(newProduct.images);
+      }
+      if (typeof newProduct.shop === 'string' && isValidJSON(newProduct.shop)) {
+        newProduct.shop = JSON.parse(newProduct.shop);
+      }
+      if (typeof newProduct.tags === 'string' && isValidJSON(newProduct.tags)) {
+        newProduct.tags = JSON.parse(newProduct.tags);
+      }
 
       return newProduct;
     });
@@ -103,9 +117,15 @@ router.get(
       const events = await Event.findAll({ where: { shopId: req.params.id } });
       const updatedProducts = events.map((product) => {
         const newProduct = product.toJSON();
-        newProduct.images = JSON.parse(newProduct.images);
-        newProduct.shop = JSON.parse(newProduct.shop);
-      newProduct.tags = JSON.parse(newProduct.tags);
+        if (typeof newProduct.images === 'string' && isValidJSON(newProduct.images)) {
+          newProduct.images = JSON.parse(newProduct.images);
+        }
+        if (typeof newProduct.shop === 'string' && isValidJSON(newProduct.shop)) {
+          newProduct.shop = JSON.parse(newProduct.shop);
+        }
+        if (typeof newProduct.tags === 'string' && isValidJSON(newProduct.tags)) {
+          newProduct.tags = JSON.parse(newProduct.tags);
+        }
 
         return newProduct;
       });

@@ -118,7 +118,7 @@ const AllEvents = () => {
         const product_name = d.replace(/\s+/g, "-");
         return (
           <>
-            <Link to={`/product/${product_name}`}>
+            <Link to={`/product/${params.id}?isEvent=true`}>
               <Button>
                 <AiOutlineEye size={20} />
               </Button>
@@ -198,6 +198,8 @@ const AllEvents = () => {
       newForm,
       { headers: { "Content-Type": "multipart/form-data" } }
     );
+    dispatch(getAllEventsShop(seller.id))
+    handleClose()
   };
   const handleStartDateChange = (e) => {
     const startDate = new Date(e.target.value);
