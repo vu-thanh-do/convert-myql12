@@ -8,8 +8,11 @@ const Shop = require("../model/shop");
 const { upload } = require("../multer");
 const ErrorHandler = require("../utils/ErrorHandler");
 const fs = require("fs");
-const { analyzeSentiment } = require("./analyzeSentimentWithGPT");
-
+const {
+  analyzeSentiment,
+  checkModelStatus,
+  getDominantLabel,
+} = require("./analyzeSentimentWithGPT");
 
 // create product
 router.post(
@@ -86,31 +89,85 @@ router.put(
 );
 
 // get all products of a shop
+// router.get(
+//   "/get-all-products-shop/:id",
+//   catchAsyncErrors(async (req, res, next) => {
+//     try {
+//       const products = await Product.findAll({
+//         where: { shopId: req.params.id },
+//       });
+//       const updatedProducts = products.map(product => {
+//         const newProduct = product.toJSON();
+//         newProduct.images = JSON.parse(newProduct.images);
+//         newProduct.shop = JSON.parse(newProduct.shop);
+//         newProduct.reviews = JSON.parse(newProduct.reviews);
+//         return newProduct;
+//       });
+
+//       res.status(201).json({
+//         success: true,
+//         products :updatedProducts,
+//       });
+//     } catch (error) {
+//       return next(new ErrorHandler(error, 400));
+//     }
+//   })
+// );
 router.get(
   "/get-all-products-shop/:id",
   catchAsyncErrors(async (req, res, next) => {
     try {
+      // Kiểm tra mô hình trước khi tiếp tục
+      while (!(await checkModelStatus())) {
+        console.log("Chờ thêm 10 giây...");
+        await new Promise((resolve) => setTimeout(resolve, 10000));
+      }
+
       const products = await Product.findAll({
         where: { shopId: req.params.id },
       });
-      const updatedProducts = products.map(product => {
-        const newProduct = product.toJSON();
-        newProduct.images = JSON.parse(newProduct.images);
-        newProduct.shop = JSON.parse(newProduct.shop);
-        newProduct.reviews = JSON.parse(newProduct.reviews);
-        return newProduct;
-      });
+
+      const updatedProducts = await Promise.all(
+        products.map(async (product) => {
+          const newProduct = product.toJSON();
+          newProduct.images = JSON.parse(newProduct.images);
+          newProduct.shop = JSON.parse(newProduct.shop);
+          newProduct.reviews = JSON.parse(newProduct.reviews);
+
+          // Phân tích cảm xúc cho từng review
+          if (newProduct.reviews && newProduct.reviews.length > 0) {
+            newProduct.reviews = await Promise.all(
+              newProduct.reviews.map(async (review) => {
+                if (review.comment) {
+                  const sentimentResult = await analyzeSentiment(
+                    review.comment
+                  );
+                  if (sentimentResult) {
+                    const dominant = getDominantLabel(sentimentResult);
+                    return {
+                      ...review,
+                      sentiment: dominant, // Thêm trường cảm xúc vào mỗi review
+                    };
+                  }
+                }
+                return review; // Nếu không thể phân tích, trả về review gốc
+              })
+            );
+          }
+
+          return newProduct;
+        })
+      );
 
       res.status(201).json({
         success: true,
-        products :updatedProducts,
+        products: updatedProducts,
       });
     } catch (error) {
       return next(new ErrorHandler(error, 400));
     }
   })
 );
-
 
 // delete product of a shop
 router.delete(
