@@ -29,7 +29,7 @@ const ProductCard = ({ data, isEvent }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (wishlist && wishlist.find((i) => i.id === data.id)) {
+    if (wishlist && wishlist.find((i) => i.id == data.id)) {
       setClick(true);
     } else {
       setClick(false);
@@ -49,7 +49,7 @@ const ProductCard = ({ data, isEvent }) => {
   };
 
   const addToCartHandler = (id) => {
-    const isItemExists = cart && cart.find((i) => i.id === id);
+    const isItemExists = cart && cart.find((i) => i.id == id);
     if (isItemExists) {
       toast.error("The product is already in the cart!");
     } else {

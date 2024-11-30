@@ -18,7 +18,7 @@ const ProductDetailsCard = ({ setOpen, data }) => {
     const [click, setClick] = useState(false);
 
     useEffect(() => {
-        setClick(wishlist.some((item) => item.id === data?.id));
+        setClick(wishlist.some((item) => item.id == data?.id));
     }, [wishlist, data]);
 
     const decrementCount = () => count > 1 && setCount(count - 1);
@@ -35,7 +35,7 @@ const ProductDetailsCard = ({ setOpen, data }) => {
         0;
     const averageRating = (totalRatings / totalReviewsLength || 0).toFixed(2);
     const addToCartHandler = () => {
-        if (cart.some((item) => item.id === data.id)) {
+        if (cart.some((item) => item.id == data.id)) {
             toast.error('The product is already in the cart!');
         } else if (data.stock < 1) {
             toast.error('The product is out of stock!');

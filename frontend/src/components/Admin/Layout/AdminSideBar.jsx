@@ -15,10 +15,10 @@ const AdminSideBar = ({ active }) => {
             {/* Dashboard */}
             <div className="w-full flex items-center p-4">
                 <Link to="/admin/dashboard" className="w-full flex items-center">
-                    <RxDashboard size={30} color={active === 1 ? '#febd69' : '#fff'} />
+                    <RxDashboard size={30} color={active == 1 ? '#febd69' : '#fff'} />
                     <h5
                         className={`hidden 800px:block pl-2 text-[18px] font-[400] ${
-                            active === 1 ? 'text-[#febd69] font-bold' : 'text-[#fff]'
+                            active == 1 ? 'text-[#febd69] font-bold' : 'text-[#fff]'
                         }`}
                     >
                         Dashboard

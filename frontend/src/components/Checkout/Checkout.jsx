@@ -68,7 +68,7 @@ const Checkout = () => {
             const shopId = res.data.couponCode?.shopId;
             const couponCodeValue = res.data.couponCode?.value;
             if (res.data.couponCode !== null) {
-                const isCouponValid = cart && cart.filter((item) => item.shopId === shopId);
+                const isCouponValid = cart && cart.filter((item) => item.shopId == shopId);
 
                 if (isCouponValid.length === 0) {
                     toast.error('The voucher code is not valid for this store!');

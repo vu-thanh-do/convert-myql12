@@ -57,7 +57,7 @@ const AllProducts = () => {
   };
   const handelEdit = (id) => {
     try {
-      const dataField = products?.filter((itc) => itc.id === id.id);
+      const dataField = products?.filter((itc) => itc.id == id.id);
       console.log(dataField, "dataField");
       setName(dataField?.[0]?.name || ""); // Set product name or empty string
       setDescription(dataField?.[0]?.description || ""); // Set product description or empty string

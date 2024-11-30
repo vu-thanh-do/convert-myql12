@@ -8,6 +8,8 @@ const Shop = require("../model/shop");
 const { upload } = require("../multer");
 const ErrorHandler = require("../utils/ErrorHandler");
 const fs = require("fs");
+const { analyzeSentiment } = require("./analyzeSentimentWithGPT");
+
 
 // create product
 router.post(
@@ -44,11 +46,11 @@ router.post(
 );
 router.put(
   "/update-product",
-  upload.array("images"), 
+  upload.array("images"),
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { shopId, productId, ...productData } = req.body;
-      console.log(req.body,'cc')
+      console.log(req.body, "cc");
       const shop = await Shop.findByPk(shopId);
       const dataProduct = await Product.findOne({ where: { id: productId } });
       if (!dataProduct) {
@@ -59,22 +61,24 @@ router.put(
       }
       const files = req.files;
       if (files && files.length > 0) {
-        const imageUrls = files.map((file) => `${file.filename}`); 
-        productData.images = imageUrls; 
+        const imageUrls = files.map((file) => `${file.filename}`);
+        productData.images = imageUrls;
       }
       dataProduct.name = productData.name || dataProduct.name;
-      dataProduct.description = productData.description || dataProduct.description;
+      dataProduct.description =
+        productData.description || dataProduct.description;
       dataProduct.price = productData.price || dataProduct.price;
-      dataProduct.discountPrice = productData.discountPrice || dataProduct.discountPrice;
-      dataProduct.originalPrice = productData.originalPrice || dataProduct.originalPrice;
-      dataProduct.shopId = shopId; 
-      dataProduct.images = productData.images || dataProduct.images; 
+      dataProduct.discountPrice =
+        productData.discountPrice || dataProduct.discountPrice;
+      dataProduct.originalPrice =
+        productData.originalPrice || dataProduct.originalPrice;
+      dataProduct.shopId = shopId;
+      dataProduct.images = productData.images || dataProduct.images;
       await dataProduct.save();
       res.status(200).json({
         success: true,
         product: dataProduct,
       });
-
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
@@ -90,22 +94,23 @@ router.get(
         where: { shopId: req.params.id },
       });
       const updatedProducts = products.map(product => {
-        const newProduct = product.toJSON(); 
+        const newProduct = product.toJSON();
         newProduct.images = JSON.parse(newProduct.images);
         newProduct.shop = JSON.parse(newProduct.shop);
         newProduct.reviews = JSON.parse(newProduct.reviews);
         return newProduct;
       });
-      
+
       res.status(201).json({
         success: true,
-        products :updatedProducts, 
+        products :updatedProducts,
       });
     } catch (error) {
       return next(new ErrorHandler(error, 400));
     }
   })
 );
+
 
 // delete product of a shop
 router.delete(
@@ -149,8 +154,8 @@ router.get(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const products = await Product.findAll({});
-      const updatedProducts = products.map(product => {
-        const newProduct = product.toJSON(); 
+      const updatedProducts = products.map((product) => {
+        const newProduct = product.toJSON();
         newProduct.images = JSON.parse(newProduct.images);
         newProduct.shop = JSON.parse(newProduct.shop);
         return newProduct;
@@ -193,7 +198,7 @@ router.put(
 
       if (isReviewed) {
         dataReview.forEach((rev) => {
-          if (rev.user.id === req.user.id) {
+          if (rev.user.id == req.user.id) {
             rev.rating = rating;
             rev.comment = comment;
             rev.user = user;

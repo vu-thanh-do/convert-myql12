@@ -9,10 +9,17 @@ import styles from '../../styles/styles';
 import { TfiGallery } from 'react-icons/tfi';
 import socketIO from 'socket.io-client';
 import { format } from 'timeago.js';
+import { socket } from '../../pages/useSocket';
+import { useLocation } from "react-router-dom";
+
 const ENDPOINT = 'https://socket-ecommerce-tu68.onrender.com/';
 const socketId = socketIO(ENDPOINT, { transports: ['websocket'] });
 
 const DashboardMessages = () => {
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const crve = searchParams.get("crve");
+
     const { seller } = useSelector((state) => state.seller);
     const [conversations, setConversations] = useState([]);
     const [arrivalMessage, setArrivalMessage] = useState(null);
@@ -41,21 +48,21 @@ const DashboardMessages = () => {
             currentChat?.members.includes(arrivalMessage.sender) &&
             setMessages((prev) => [...prev, arrivalMessage]);
     }, [arrivalMessage, currentChat]);
+    const getConversation = async () => {
+        try {
+            const resonse = await axios.get(`${server}/conversation/get-all-conversation-seller/${seller?.id}`, {
+                withCredentials: true,
+            });
 
+            setConversations(resonse.data.conversations);
+            
+        } catch (error) {
+            // console.log(error);
+        }
+    };
     useEffect(() => {
-        const getConversation = async () => {
-            try {
-                const resonse = await axios.get(`${server}/conversation/get-all-conversation-seller/${seller?.id}`, {
-                    withCredentials: true,
-                });
-
-                setConversations(resonse.data.conversations);
-            } catch (error) {
-                // console.log(error);
-            }
-        };
         getConversation();
-    }, [seller, messages]);
+    }, [seller, messages,seller?.id,currentChat]);
 
     useEffect(() => {
         if (seller) {
@@ -75,15 +82,16 @@ const DashboardMessages = () => {
     };
 
     // get messages
+    const getMessage = async () => {
+        try {
+            const response = await axios.get(`${server}/message/get-all-messages/${crve}`);
+            setMessages(response.data.messages);
+        } catch (error) {
+            console.log(error);
+        }
+    };
     useEffect(() => {
-        const getMessage = async () => {
-            try {
-                const response = await axios.get(`${server}/message/get-all-messages/${currentChat?.id}`);
-                setMessages(response.data.messages);
-            } catch (error) {
-                console.log(error);
-            }
-        };
+        getConversation();
         getMessage();
     }, [currentChat]);
 
@@ -97,7 +105,7 @@ const DashboardMessages = () => {
             conversationId: currentChat.id,
         };
 
-        const receiverId = currentChat.members.find((member) => member.id !== seller.id);
+        const receiverId = currentChat.members.find((member) => member.id != seller.id);
 
         socketId.emit('sendMessage', {
             senderId: seller.id,
@@ -156,7 +164,7 @@ const DashboardMessages = () => {
         formData.append('text', newMessage);
         formData.append('conversationId', currentChat.id);
 
-        const receiverId = currentChat.members.find((member) => member !== seller.id);
+        const receiverId = currentChat.members.find((member) => member != seller.id);
 
         socketId.emit('sendMessage', {
             senderId: seller.id,
@@ -187,7 +195,17 @@ const DashboardMessages = () => {
             lastMessageId: seller.id,
         });
     };
-
+    useEffect(() => {
+        socket.connect();
+        socket.on("newMsg", (data) => {
+        getConversation();
+            getMessage();
+        });
+        return () => {
+          socket.off("newMsg");
+          socket.disconnect();
+        };
+      }, []);
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ beahaviour: 'smooth' });
     }, [messages]);
@@ -236,11 +254,11 @@ const DashboardMessages = () => {
 };
 
 const MessageList = ({ data, index, setOpen, setCurrentChat, me, setUserData, online, setActiveStatus }) => {
-    console.log(data);
+    console.log(data,'datadata');
     const [user, setUser] = useState([]);
     const navigate = useNavigate();
     const handleClick = (id) => {
-        navigate(`/dashboard-messages?${id}`);
+        navigate(`/dashboard-messages?${id}&crve=${id}`);
         setOpen(true);
     };
     const [active, setActive] = useState(0);
@@ -263,11 +281,13 @@ const MessageList = ({ data, index, setOpen, setCurrentChat, me, setUserData, on
         <div
             className={`w-full flex p-3 px-3 ${active === index ? 'bg-[#00000010]' : 'bg-transparent'}  cursor-pointer`}
             onClick={(e) =>
+               {
                 setActive(index) ||
                 handleClick(data.id) ||
                 setCurrentChat(data) ||
                 setUserData(user) ||
                 setActiveStatus(online)
+               }
             }
         >
             <div className="relative">
@@ -321,11 +341,11 @@ const SellerInbox = ({
                         return (
                             <div
                                 className={`flex w-full my-2 ${
-                                    item.sender === sellerId ? 'justify-end' : 'justify-start'
+                                    item.sender == sellerId ? 'justify-end' : 'justify-start'
                                 }`}
                                 ref={scrollRef}
                             >
-                                {item.sender !== sellerId && (
+                                {item.sender != sellerId && (
                                     <img
                                         src={`${backend_url}${userData?.avatar}`}
                                         className="w-[40px] h-[40px] rounded-full mr-3"
@@ -338,7 +358,7 @@ const SellerInbox = ({
                                         className="w-[300px] h-[300px] object-cover rounded-[10px] mr-2"
                                     />
                                 )}
-                                {item.text !== '' && (
+                                {item.text != '' && (
                                     <div>
                                         <div
                                             className={`w-max p-2 rounded ${
