@@ -215,6 +215,7 @@ router.get(
         const newProduct = product.toJSON();
         newProduct.images = JSON.parse(newProduct.images);
         newProduct.shop = JSON.parse(newProduct.shop);
+        newProduct.reviews = JSON.parse(newProduct.reviews);
         return newProduct;
       });
       res.status(201).json({

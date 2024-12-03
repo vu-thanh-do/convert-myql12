@@ -9,6 +9,7 @@ import { getAllProductsShop } from '../../redux/actions/product';
 
 const ShopInfo = ({ isOwner }) => {
     const [data, setData] = useState({});
+    console.log(data,'datadata')
     const { products } = useSelector((state) => state.products);
     const [isLoading, setIsLoading] = useState(false);
     const { id } = useParams();
@@ -27,7 +28,7 @@ const ShopInfo = ({ isOwner }) => {
                 console.log(error);
                 setIsLoading(false);
             });
-    }, []);
+    }, [id]);
 
     const logoutHandler = async () => {
         axios.get(`${server}/shop/logout`, {

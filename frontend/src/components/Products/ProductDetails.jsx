@@ -55,21 +55,22 @@ const ProductDetails = ({ data }) => {
       toast.success("The product has been added to the cart!");
     }
   };
-  console.log(products, "productproductproduct");
-  const totalReviewsLength =
-    (products?.reviews &&
-      products?.reduce((acc, product) => acc + product?.reviews?.length, 0)) ||
-    0;
-  const totalRatings =
-    (products?.reviews &&
-      products?.reduce(
-        (acc, product) =>
-          acc +
-          product?.reviews.reduce((sum, review) => sum + review.rating, 0),
+  const totalReviewsLength = products?.reduce(
+    (acc, product) => acc + (product.reviews?.length || 0),
+    0
+  );
+  const totalRatings = products?.reduce(
+    (acc, product) =>
+      acc +
+      (product.reviews?.reduce(
+        (sum, review) => sum + (review.rating || 0),
         0
-      )) ||
-    0;
-  const averageRating = (totalRatings / totalReviewsLength || 0).toFixed(2);
+      ) || 0),
+    0
+  );
+  const averageRating = (
+    Number(totalRatings) / Number(totalReviewsLength) || 0
+  ).toFixed(2);
 
   const handleMessageSubmit = async () => {
     if (isAuthenticated) {
