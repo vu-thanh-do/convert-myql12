@@ -6,15 +6,13 @@ const Shop = require("../model/shop");
 
 exports.isAuthenticated = catchAsyncErrors(async(req,res,next) => {
     const {token} = req.cookies;
-
+  
     if(!token){
         return next(new ErrorHandler("Vui lòng đăng nhập để tiếp tục", 401));
     }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-
-    req.user = await User.findById(decoded.id);
-
+    const decoded = jwt.verify(token, "B2hFTxy%M#WaHgD6$5Wex2o@b*9J7u");
+    console.log(decoded)
+    req.user = await User.findByPk(decoded.id);
     next();
 });
 
@@ -24,10 +22,9 @@ exports.isSeller = catchAsyncErrors(async(req,res,next) => {
     if(!seller_token){
         return next(new ErrorHandler("Vui lòng đăng nhập để tiếp tục", 401));
     }
+    const decoded = jwt.verify(seller_token, "B2hFTxy%M#WaHgD6$5Wex2o@b*9J7u");
 
-    const decoded = jwt.verify(seller_token, process.env.JWT_SECRET_KEY);
-
-    req.seller = await Shop.findById(decoded.id);
+    req.seller = await Shop.findByPk(decoded.id);
 
     next();
 });

@@ -192,7 +192,7 @@ const AllOrders = () => {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(getAllOrdersOfUser(user._id));
+        dispatch(getAllOrdersOfUser(user.id));
     }, []);
 
     const columns = [
@@ -249,7 +249,7 @@ const AllOrders = () => {
     orders &&
         orders.forEach((item) => {
             row.push({
-                id: item._id,
+                id: item.id,
                 itemsQty: item.cart.length,
                 total: `${currency.format(item.totalPrice, { code: 'VND' })}`,
                 status: item.status,
@@ -265,15 +265,16 @@ const AllOrders = () => {
 
 const AllRefundOrders = () => {
     const { user } = useSelector((state) => state.user);
+    
     const { orders } = useSelector((state) => state.order);
     const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(getAllOrdersOfUser(user._id));
+        dispatch(getAllOrdersOfUser(user.id));
     }, []);
 
     const eligibleOrders = orders && orders.filter((item) => item.status === 'Processing Refund');
-
+   
     const columns = [
         { field: 'id', headerName: 'ID', minWidth: 150, flex: 0.7 },
 
@@ -328,7 +329,7 @@ const AllRefundOrders = () => {
     eligibleOrders &&
         eligibleOrders.forEach((item) => {
             row.push({
-                id: item._id,
+                id: item.id,
                 itemsQty: item.cart.length,
                 // total: "US$ " + item.totalPrice,
                 total: `${currency.format(item.totalPrice, { code: 'VND' })}`,
@@ -349,7 +350,7 @@ const TrackOrder = () => {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(getAllOrdersOfUser(user._id));
+        dispatch(getAllOrdersOfUser(user.id));
     }, []);
 
     const columns = [
@@ -406,7 +407,7 @@ const TrackOrder = () => {
     orders &&
         orders.forEach((item) => {
             row.push({
-                id: item._id,
+                id: item.id,
                 itemsQty: item.cart.length,
                 // total: "US$ " + item.totalPrice,
                 total: `${currency.format(item.totalPrice, { code: 'VND' })}`,
@@ -538,12 +539,12 @@ const Address = () => {
             // setAddress2("");
             // setZipCode(null);
             setAddressType('');
+            window.location.reload();
         }
     };
 
     const handleDelete = (item) => {
-        const id = item._id;
-        dispatch(deleteUserAddress(id));
+        dispatch(deleteUserAddress(item));
     };
 
     return (
@@ -686,7 +687,7 @@ const Address = () => {
             </div>
             <br />
             {user &&
-                user.addresses.map((item, index) => (
+                JSON.parse(user?.addresses || '[]').map((item, index) => (
                     <div
                         className="w-full bg-white h-min 800px:h-[70px] rounded-[4px] flex items-center px-3 shadow justify-between pr-10 mb-5"
                         key={index}
@@ -701,12 +702,12 @@ const Address = () => {
                             <h6 className="text-[12px] 800px:text-[unset]">{user && user.phoneNumber}</h6>
                         </div>
                         <div className="min-w-[10%] flex items-center justify-between pl-8">
-                            <AiOutlineDelete size={25} className="cursor-pointer" onClick={() => handleDelete(item)} />
+                            <AiOutlineDelete size={25} className="cursor-pointer" onClick={() => handleDelete(index)} />
                         </div>
                     </div>
                 ))}
 
-            {user && user.addresses.length === 0 && (
+            {user && JSON.parse(user.addresses || '[]').length === 0 && (
                 <h5 className="text-center pt-8 text-[18px]">You have not updated any address yet!!!</h5>
             )}
         </div>

@@ -9,10 +9,17 @@ import styles from '../../styles/styles';
 import { TfiGallery } from 'react-icons/tfi';
 import socketIO from 'socket.io-client';
 import { format } from 'timeago.js';
+import { socket } from '../../pages/useSocket';
+import { useLocation } from "react-router-dom";
+
 const ENDPOINT = 'https://socket-ecommerce-tu68.onrender.com/';
 const socketId = socketIO(ENDPOINT, { transports: ['websocket'] });
 
 const DashboardMessages = () => {
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const crve = searchParams.get("crve");
+
     const { seller } = useSelector((state) => state.seller);
     const [conversations, setConversations] = useState([]);
     const [arrivalMessage, setArrivalMessage] = useState(null);
@@ -41,25 +48,25 @@ const DashboardMessages = () => {
             currentChat?.members.includes(arrivalMessage.sender) &&
             setMessages((prev) => [...prev, arrivalMessage]);
     }, [arrivalMessage, currentChat]);
+    const getConversation = async () => {
+        try {
+            const resonse = await axios.get(`${server}/conversation/get-all-conversation-seller/${seller?.id}`, {
+                withCredentials: true,
+            });
 
+            setConversations(resonse.data.conversations);
+            
+        } catch (error) {
+            // console.log(error);
+        }
+    };
     useEffect(() => {
-        const getConversation = async () => {
-            try {
-                const resonse = await axios.get(`${server}/conversation/get-all-conversation-seller/${seller?._id}`, {
-                    withCredentials: true,
-                });
-
-                setConversations(resonse.data.conversations);
-            } catch (error) {
-                // console.log(error);
-            }
-        };
         getConversation();
-    }, [seller, messages]);
+    }, [seller, messages,seller?.id,currentChat]);
 
     useEffect(() => {
         if (seller) {
-            const sellerId = seller?._id;
+            const sellerId = seller?.id;
             socketId.emit('addUser', sellerId);
             socketId.on('getUsers', (data) => {
                 setOnlineUsers(data);
@@ -68,22 +75,23 @@ const DashboardMessages = () => {
     }, [seller]);
 
     const onlineCheck = (chat) => {
-        const chatMembers = chat.members.find((member) => member !== seller?._id);
-        const online = onlineUsers.find((user) => user.userId === chatMembers);
+        const chatMembers = chat?.members?.find((member) => member != seller?.id);
+        const online = onlineUsers?.find((user) => user?.userId == chatMembers);
 
         return online ? true : false;
     };
 
     // get messages
+    const getMessage = async () => {
+        try {
+            const response = await axios.get(`${server}/message/get-all-messages/${crve}`);
+            setMessages(response.data.messages);
+        } catch (error) {
+            console.log(error);
+        }
+    };
     useEffect(() => {
-        const getMessage = async () => {
-            try {
-                const response = await axios.get(`${server}/message/get-all-messages/${currentChat?._id}`);
-                setMessages(response.data.messages);
-            } catch (error) {
-                console.log(error);
-            }
-        };
+        getConversation();
         getMessage();
     }, [currentChat]);
 
@@ -92,15 +100,15 @@ const DashboardMessages = () => {
         e.preventDefault();
 
         const message = {
-            sender: seller._id,
+            sender: seller.id,
             text: newMessage,
-            conversationId: currentChat._id,
+            conversationId: currentChat.id,
         };
 
-        const receiverId = currentChat.members.find((member) => member.id !== seller._id);
+        const receiverId = currentChat.members.find((member) => member.id != seller.id);
 
         socketId.emit('sendMessage', {
-            senderId: seller._id,
+            senderId: seller.id,
             receiverId,
             text: newMessage,
         });
@@ -125,13 +133,13 @@ const DashboardMessages = () => {
     const updateLastMessage = async () => {
         socketId.emit('updateLastMessage', {
             lastMessage: newMessage,
-            lastMessageId: seller._id,
+            lastMessageId: seller.id,
         });
 
         await axios
-            .put(`${server}/conversation/update-last-message/${currentChat._id}`, {
+            .put(`${server}/conversation/update-last-message/${currentChat.id}`, {
                 lastMessage: newMessage,
-                lastMessageId: seller._id,
+                lastMessageId: seller.id,
             })
             .then((res) => {
                 console.log(res.data.conversation);
@@ -152,14 +160,14 @@ const DashboardMessages = () => {
         const formData = new FormData();
 
         formData.append('images', e);
-        formData.append('sender', seller._id);
+        formData.append('sender', seller.id);
         formData.append('text', newMessage);
-        formData.append('conversationId', currentChat._id);
+        formData.append('conversationId', currentChat.id);
 
-        const receiverId = currentChat.members.find((member) => member !== seller._id);
+        const receiverId = currentChat.members.find((member) => member != seller.id);
 
         socketId.emit('sendMessage', {
-            senderId: seller._id,
+            senderId: seller.id,
             receiverId,
             images: e,
         });
@@ -182,12 +190,22 @@ const DashboardMessages = () => {
     };
 
     const updateLastMessageForImage = async () => {
-        await axios.put(`${server}/conversation/update-last-message/${currentChat._id}`, {
+        await axios.put(`${server}/conversation/update-last-message/${currentChat.id}`, {
             lastMessage: 'Photo',
-            lastMessageId: seller._id,
+            lastMessageId: seller.id,
         });
     };
-
+    useEffect(() => {
+        socket.connect();
+        socket.on("newMsg", (data) => {
+        getConversation();
+            getMessage();
+        });
+        return () => {
+          socket.off("newMsg");
+          socket.disconnect();
+        };
+      }, []);
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ beahaviour: 'smooth' });
     }, [messages]);
@@ -206,7 +224,7 @@ const DashboardMessages = () => {
                                 index={index}
                                 setOpen={setOpen}
                                 setCurrentChat={setCurrentChat}
-                                me={seller._id}
+                                me={seller.id}
                                 setUserData={setUserData}
                                 userData={userData}
                                 online={onlineCheck(item)}
@@ -223,7 +241,7 @@ const DashboardMessages = () => {
                     setNewMessage={setNewMessage}
                     sendMessageHandler={sendMessageHandler}
                     messages={messages}
-                    sellerId={seller._id}
+                    sellerId={seller.id}
                     userData={userData}
                     activeStatus={activeStatus}
                     scrollRef={scrollRef}
@@ -236,11 +254,11 @@ const DashboardMessages = () => {
 };
 
 const MessageList = ({ data, index, setOpen, setCurrentChat, me, setUserData, online, setActiveStatus }) => {
-    console.log(data);
+    console.log(data,'datadata');
     const [user, setUser] = useState([]);
     const navigate = useNavigate();
     const handleClick = (id) => {
-        navigate(`/dashboard-messages?${id}`);
+        navigate(`/dashboard-messages?${id}&crve=${id}`);
         setOpen(true);
     };
     const [active, setActive] = useState(0);
@@ -263,11 +281,13 @@ const MessageList = ({ data, index, setOpen, setCurrentChat, me, setUserData, on
         <div
             className={`w-full flex p-3 px-3 ${active === index ? 'bg-[#00000010]' : 'bg-transparent'}  cursor-pointer`}
             onClick={(e) =>
+               {
                 setActive(index) ||
-                handleClick(data._id) ||
+                handleClick(data.id) ||
                 setCurrentChat(data) ||
                 setUserData(user) ||
                 setActiveStatus(online)
+               }
             }
         >
             <div className="relative">
@@ -281,7 +301,7 @@ const MessageList = ({ data, index, setOpen, setCurrentChat, me, setUserData, on
             <div className="pl-3">
                 <h1 className="text-[18px]">{user?.name}</h1>
                 <p className="text-[16px] text-[#000c]">
-                    {data?.lastMessageId !== user?._id ? 'You:' : user?.name.split(' ')[0] + ': '} {data?.lastMessage}
+                    {data?.lastMessageId !== user?.id ? 'You:' : user?.name.split(' ')[0] + ': '} {data?.lastMessage}
                 </p>
             </div>
         </div>
@@ -321,11 +341,11 @@ const SellerInbox = ({
                         return (
                             <div
                                 className={`flex w-full my-2 ${
-                                    item.sender === sellerId ? 'justify-end' : 'justify-start'
+                                    item.sender == sellerId ? 'justify-end' : 'justify-start'
                                 }`}
                                 ref={scrollRef}
                             >
-                                {item.sender !== sellerId && (
+                                {item.sender != sellerId && (
                                     <img
                                         src={`${backend_url}${userData?.avatar}`}
                                         className="w-[40px] h-[40px] rounded-full mr-3"
@@ -338,7 +358,7 @@ const SellerInbox = ({
                                         className="w-[300px] h-[300px] object-cover rounded-[10px] mr-2"
                                     />
                                 )}
-                                {item.text !== '' && (
+                                {item.text != '' && (
                                     <div>
                                         <div
                                             className={`w-max p-2 rounded ${

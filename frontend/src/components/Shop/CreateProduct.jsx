@@ -56,7 +56,7 @@ const CreateProduct = () => {
         newForm.append('originalPrice', originalPrice);
         newForm.append('discountPrice', discountPrice);
         newForm.append('stock', stock);
-        newForm.append('shopId', seller._id);
+        newForm.append('shopId', seller.id);
         dispatch(createProduct(newForm));
     };
 

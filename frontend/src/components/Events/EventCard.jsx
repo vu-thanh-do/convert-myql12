@@ -12,7 +12,7 @@ const EventCard = ({ active, data }) => {
     const dispatch = useDispatch();
 
     const addToCartHandler = (data) => {
-        const isItemExists = cart && cart.find((i) => i._id === data._id);
+        const isItemExists = cart && cart.find((i) => i.id == data.id);
         if (isItemExists) {
             toast.error('Item already in cart!');
         } else {
@@ -62,7 +62,7 @@ const EventCard = ({ active, data }) => {
                 <CountDown data={data} />
                 {/* Nút hành động */}
                 <div className="flex items-center space-x-4 mt-6">
-                    <Link to={`/product/${data._id}?isEvent=true`}>
+                    <Link to={`/product/${data.id}?isEvent=true`}>
                         <button className="bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold shadow-md hover:bg-blue-700 transition">
                             See Details
                         </button>

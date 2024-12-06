@@ -12,16 +12,14 @@ router.post(
   isSeller,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const isCoupounCodeExists = await CoupounCode.find({
-        name: req.body.name,
+      const isCoupounCodeExists = await CoupounCode.findOne({
+        where: { name: req.body.name },
       });
-
-      if (isCoupounCodeExists.length !== 0) {
+      console.log(isCoupounCodeExists,'isCoupounCodeExists')
+      if (isCoupounCodeExists) {
         return next(new ErrorHandler("Mã giảm giá đã tồn tại!", 400));
       }
-
       const coupounCode = await CoupounCode.create(req.body);
-
       res.status(201).json({
         success: true,
         coupounCode,
@@ -38,7 +36,7 @@ router.get(
   isSeller,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const couponCodes = await CoupounCode.find({ shopId: req.seller.id });
+      const couponCodes = await CoupounCode.findAll({ where:{shopId: req.seller.id} });
       res.status(201).json({
         success: true,
         couponCodes,
@@ -55,9 +53,12 @@ router.delete(
   isSeller,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const couponCode = await CoupounCode.findByIdAndDelete(req.params.id);
-
-      if (!couponCode) {
+      const deletedCoupon = await CoupounCode.destroy({
+        where: {
+          id:  req.params.id, // Thay `id` bằng tên cột ID thực tế trong model
+        },
+      });
+      if (!deletedCoupon) {
         return next(new ErrorHandler("Mã giảm giá không tồn tại!", 400));
       }
       res.status(201).json({
@@ -75,8 +76,7 @@ router.get(
   "/get-coupon-value/:name",
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const couponCode = await CoupounCode.findOne({ name: req.params.name });
-
+      const couponCode = await CoupounCode.findOne({ where:{name: req.params.name} });
       res.status(200).json({
         success: true,
         couponCode,

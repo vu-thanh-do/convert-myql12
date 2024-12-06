@@ -1,48 +1,53 @@
-const mongoose = require("mongoose");
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
-const orderSchema = new mongoose.Schema({
-    cart:{
-        type: Array,
-        required: true,
+const Order = sequelize.define(
+  "Order",
+  {
+    cart: {
+      type: DataTypes.JSON,
+      allowNull: false,
     },
-    shippingAddress:{
-        type: Object,
-        required: true,
+    shipping_address: {
+      type: DataTypes.JSON,
+      allowNull: false,
     },
-    user:{
-        type: Object,
-        required: true,
+    user: {
+      type: DataTypes.JSON,
+      allowNull: false,
     },
-    totalPrice:{
-        type: Number,
-        required: true,
+    total_price: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
     },
-    status:{
-        type: String,
-        default: "Processing",
+    status: {
+      type: DataTypes.STRING,
+      defaultValue: "Processing",
     },
-    paymentInfo:{
-        id:{
-            type: String,
-        },
-        status: {
-            type: String,
-        },
-        type:{
-            type: String,
-        },
+    payment_info: {
+      type: DataTypes.JSON,
     },
-    paidAt:{
-        type: Date,
-        default: Date.now(),
+    paymentInfo: {
+      type: DataTypes.JSON,
     },
-    deliveredAt: {
-        type: Date,
+    paid_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
-    createdAt:{
-        type: Date,
-        default: Date.now(),
+    delivered_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
-});
-
-module.exports = mongoose.model("Order", orderSchema);
+    created_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+  },
+  {
+    tableName: "orders",
+    timestamps: false,
+  }
+);
+module.exports = Order;

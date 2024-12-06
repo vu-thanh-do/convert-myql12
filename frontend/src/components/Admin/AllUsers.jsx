@@ -10,13 +10,13 @@ import { RxCross1 } from 'react-icons/rx';
 import axios from 'axios';
 import { server } from '../../server';
 import { toast } from 'react-toastify';
+import MenuItem from '@mui/material/MenuItem';
 
 const AllUsers = () => {
     const dispatch = useDispatch();
     const { users } = useSelector((state) => state.user);
     const [open, setOpen] = useState(false);
     const [userId, setUserId] = useState('');
-
     useEffect(() => {
         dispatch(getAllUsers());
     }, [dispatch]);
@@ -28,10 +28,19 @@ const AllUsers = () => {
 
         dispatch(getAllUsers());
     };
+    const handleChange = async (e, ids) => {
+        try {
+            await axios.get(` http://localhost:8000/update-role/${ids}?role=${e.target.value}`).then((res) => {
+                toast.success(res.data.message);
+            });
 
+            dispatch(getAllUsers());
+        } catch (error) {
+            //
+        }
+    };
     const columns = [
         { field: 'id', headerName: 'User ID', minWidth: 150, flex: 0.7 },
-
         {
             field: 'name',
             headerName: 'Name',
@@ -51,6 +60,27 @@ const AllUsers = () => {
             type: 'text',
             minWidth: 130,
             flex: 0.7,
+            renderCell: (params) => {
+                console.log(params, 'paramsparams');
+                return (
+                    <>
+                        <select
+                            labelId="demo-simple-select-label"
+                            id="demo-simple-select"
+                            label="Age"
+                            defaultValue={params?.row?.role}
+                            onChange={(e) => {
+                                setUserId(params.id);
+                                handleChange(e, params.id);
+                            }}
+                        >
+                            <option value={'Admin'}>Admin</option>
+                            <option value={'User'}>User</option>
+                            <option value={'Shop'}>Shop</option>
+                        </select>
+                    </>
+                );
+            },
         },
 
         {
@@ -84,11 +114,11 @@ const AllUsers = () => {
     users &&
         users.forEach((item) => {
             row.push({
-                id: item._id,
+                id: item.id,
                 name: item.name,
                 email: item.email,
                 role: item.role,
-                joinedAt: item.createdAt.slice(0, 10),
+                joinedAt: item?.createdAt?.slice(0, 10),
             });
         });
 

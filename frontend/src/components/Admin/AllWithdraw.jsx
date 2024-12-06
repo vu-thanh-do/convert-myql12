@@ -101,14 +101,14 @@ const AllWithdraw = () => {
     data &&
         data.forEach((item) => {
             row.push({
-                id: item._id,
-                shopId: item.seller._id,
+                id: item.id,
+                shopId: item.seller.id,
                 name: item.seller.name,
                 amount: `${currency.format(item.amount, {
                     code: 'VND',
                 })}`,
                 status: item.status,
-                createdAt: item.createdAt.slice(0, 10),
+                createdAt: item?.createdAt?.slice(0, 10),
             });
         });
     return (

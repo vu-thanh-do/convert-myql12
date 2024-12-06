@@ -9,6 +9,7 @@ import { getAllProductsShop } from '../../redux/actions/product';
 
 const ShopInfo = ({ isOwner }) => {
     const [data, setData] = useState({});
+    console.log(data, 'datadata');
     const { products } = useSelector((state) => state.products);
     const [isLoading, setIsLoading] = useState(false);
     const { id } = useParams();
@@ -27,7 +28,7 @@ const ShopInfo = ({ isOwner }) => {
                 console.log(error);
                 setIsLoading(false);
             });
-    }, []);
+    }, [id]);
 
     const logoutHandler = async () => {
         axios.get(`${server}/shop/logout`, {
@@ -35,15 +36,14 @@ const ShopInfo = ({ isOwner }) => {
         });
         window.location.reload();
     };
+    console.log(products, 'productsproductsproducts');
 
-    const totalReviewsLength = products && products.reduce((acc, product) => acc + product.reviews.length, 0);
-
+    const totalReviewsLength = products?.reduce((acc, product) => acc + product?.reviews?.length, 0) || 0;
     const totalRatings =
-        products &&
-        products.reduce((acc, product) => acc + product.reviews.reduce((sum, review) => sum + review.rating, 0), 0);
-
-    const averageRating = totalRatings / totalReviewsLength || 0;
-
+        products?.reduce((acc, product) => acc + product.reviews.reduce((sum, review) => sum + review.rating, 0), 0) ||
+        0;
+    const averageRating = (totalRatings / totalReviewsLength || 0).toFixed(2);
+    console.log(data, 'datadatadata');
     return (
         <>
             {isLoading ? (
@@ -79,7 +79,7 @@ const ShopInfo = ({ isOwner }) => {
                     </div>
                     <div className="p-3">
                         <h5 className="font-[600]">Joined:</h5>
-                        <h4 className="text-[#131921]">{data?.createdAt?.slice(0, 10)}</h4>
+                        <h4 className="text-[#131921]">{data?.created_at?.slice(0, 10)}</h4>
                     </div>
                     {isOwner && (
                         <div className="py-3 px-4">

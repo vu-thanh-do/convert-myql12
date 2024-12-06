@@ -1,21 +1,30 @@
-const mongoose = require("mongoose");
-
-const messagesSchema = new mongoose.Schema(
-  {
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const Message =  sequelize.define('Message', {
     conversationId: {
-      type: String,
-    },
-    text:{
-      type: String,
-    },
-    sender: {
-      type: String,
-    },
-    images: {
-      type: String,
-    },
-  },
-  { timestamps: true }
-);
-
-module.exports = mongoose.model("Messages", messagesSchema);
+          type: DataTypes.STRING
+      },
+      text: {
+          type: DataTypes.TEXT
+      },
+      sender: {
+          type: DataTypes.STRING
+      },
+      images: {
+          type: DataTypes.TEXT
+      },
+      created_at: {
+          type: DataTypes.DATE,
+          defaultValue: DataTypes.NOW
+      },
+      updated_at: {
+          type: DataTypes.DATE,
+          defaultValue: DataTypes.NOW
+      }
+  }, {
+      tableName: 'messages',
+      timestamps: false
+  });
+module.exports = Message;

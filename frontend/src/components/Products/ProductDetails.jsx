@@ -22,10 +22,10 @@ const ProductDetails = ({ data }) => {
     const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
     const navigate = useNavigate();
     const dispatch = useDispatch();
-
+    console.log(data, 'data?.shop 1');
     useEffect(() => {
-        dispatch(getAllProductsShop(data?.shop._id));
-        setClick(wishlist && wishlist.some((i) => i._id === data?._id));
+        dispatch(getAllProductsShop(data?.shop.id));
+        setClick(wishlist && wishlist.some((i) => i.id == data?.id));
     }, [data, wishlist]);
 
     const incrementCount = () => setCount(count + 1);
@@ -37,7 +37,8 @@ const ProductDetails = ({ data }) => {
     };
 
     const addToCartHandler = () => {
-        if (cart.some((i) => i._id === data._id)) {
+        console.log(data, 'datadata');
+        if (cart.some((i) => i.id === data.id)) {
             toast.error('The product is already in the cart!');
         } else if (data.stock < 1) {
             toast.error(' The product is out of stock!');
@@ -46,22 +47,22 @@ const ProductDetails = ({ data }) => {
             toast.success('The product has been added to the cart!');
         }
     };
-
-    const totalReviewsLength = products?.reduce((acc, product) => acc + product.reviews.length, 0) || 0;
-    const totalRatings =
-        products?.reduce((acc, product) => acc + product.reviews.reduce((sum, review) => sum + review.rating, 0), 0) ||
-        0;
-    const averageRating = (totalRatings / totalReviewsLength || 0).toFixed(2);
+    const totalReviewsLength = products?.reduce((acc, product) => acc + (product.reviews?.length || 0), 0);
+    const totalRatings = products?.reduce(
+        (acc, product) => acc + (product.reviews?.reduce((sum, review) => sum + (review.rating || 0), 0) || 0),
+        0,
+    );
+    const averageRating = (Number(totalRatings) / Number(totalReviewsLength) || 0).toFixed(2);
 
     const handleMessageSubmit = async () => {
         if (isAuthenticated) {
             try {
                 const res = await axios.post(`${server}/conversation/create-new-conversation`, {
-                    groupTitle: data._id + user._id,
-                    userId: user._id,
-                    sellerId: data.shop._id,
+                    groupTitle: data.id + user.id,
+                    userId: user.id,
+                    sellerId: data.shop.id,
                 });
-                navigate(`/inbox?${res.data.conversation._id}`);
+                navigate(`/inbox?${res.data.conversation.id}`);
             } catch (error) {
                 toast.error(error.response.data.message);
             }
@@ -83,23 +84,39 @@ const ProductDetails = ({ data }) => {
                         <div className="lg:w-1/2">
                             <div className="flex flex-col items-center">
                                 <img
-                                    src={`${backend_url}${data.images[select]}`}
+                                    src={`${backend_url}${
+                                        Array.isArray(data.images) ? data.images[select] : data.images
+                                    }`}
                                     alt="Product"
                                     className="w-3/4 rounded-lg shadow-lg cursor-pointer"
-                                    onClick={openModal} // Open modal on click
+                                    onClick={openModal}
                                 />
+
                                 <div className="flex mt-4 space-x-2">
-                                    {data.images.map((img, index) => (
-                                        <img
-                                            key={index}
-                                            src={`${backend_url}${img}`}
-                                            onClick={() => setSelect(index)}
-                                            alt=""
-                                            className={`w-16 h-16 object-cover rounded-lg cursor-pointer transition-transform duration-300 ${
-                                                select === index ? 'ring-2 ring-orange-500 scale-105' : ''
-                                            }`}
-                                        />
-                                    ))}
+                                    {Array.isArray(data.images)
+                                        ? data.images.map((img, index) => (
+                                              <img
+                                                  key={index}
+                                                  src={`${backend_url}${img}`}
+                                                  onClick={() => setSelect(index)}
+                                                  alt=""
+                                                  className={`w-16 h-16 object-cover rounded-lg cursor-pointer transition-transform duration-300 ${
+                                                      select === index ? 'ring-2 ring-orange-500 scale-105' : ''
+                                                  }`}
+                                              />
+                                          ))
+                                        : // Nếu data.images không phải là mảng, chuyển nó thành mảng
+                                          [data.images].map((img, index) => (
+                                              <img
+                                                  key={index}
+                                                  src={`${backend_url}${img}`}
+                                                  onClick={() => setSelect(index)}
+                                                  alt=""
+                                                  className={`w-16 h-16 object-cover rounded-lg cursor-pointer transition-transform duration-300 ${
+                                                      select === index ? 'ring-2 ring-orange-500 scale-105' : ''
+                                                  }`}
+                                              />
+                                          ))}
                                 </div>
                             </div>
                         </div>
@@ -165,7 +182,7 @@ const ProductDetails = ({ data }) => {
                             </div>
                             {/* Shop and Messaging */}
                             <div className="flex items-center mt-8 space-x-4">
-                                <Link to={`/shop/preview/${data.shop._id}`}>
+                                <Link to={`/shop/preview/${data.shop.id}`}>
                                     <img
                                         src={`${backend_url}${data.shop.avatar}`}
                                         alt="Shop Avatar"
@@ -173,7 +190,7 @@ const ProductDetails = ({ data }) => {
                                     />
                                 </Link>
                                 <div>
-                                    <Link to={`/shop/preview/${data.shop._id}`}>
+                                    <Link to={`/shop/preview/${data.shop.id}`}>
                                         <h3 className="text-xl font-semibold text-orange-600">{data.shop.name}</h3>
                                     </Link>
                                     <p className="text-gray-500 text-sm">({averageRating}/5 ⭐) Reviews</p>
@@ -209,7 +226,9 @@ const ProductDetails = ({ data }) => {
                         >
                             <div className="relative">
                                 <img
-                                    src={`${backend_url}${data.images[select]}`}
+                                    src={`${backend_url}${
+                                        Array.isArray(data.images) ? data.images[select] : data.images
+                                    }`}
                                     alt="Enlarged Product"
                                     className="max-w-full max-h-full rounded-lg"
                                 />
@@ -271,7 +290,7 @@ const ProductDetailsInfo = ({ data, products, totalReviewsLength, averageRating 
             )}
             {activeTab === 2 && (
                 <div className="space-y-4">
-                    {data.reviews.length > 0 ? (
+                    {data?.reviews && data?.reviews?.length > 0 ? (
                         data.reviews.map((review, index) => (
                             <div key={index} className="flex space-x-4 bg-gray-100 p-4 rounded-lg shadow-md">
                                 <img
@@ -294,7 +313,7 @@ const ProductDetailsInfo = ({ data, products, totalReviewsLength, averageRating 
             {activeTab === 3 && (
                 <div className="lg:flex lg:space-x-8">
                     <div className="lg:w-1/2">
-                        <Link to={`/shop/preview/${data.shop._id}`}>
+                        <Link to={`/shop/preview/${data.shop.id}`}>
                             <div className="flex items-center space-x-3">
                                 <img
                                     src={`${backend_url}${data.shop.avatar}`}
@@ -311,7 +330,12 @@ const ProductDetailsInfo = ({ data, products, totalReviewsLength, averageRating 
                     </div>
                     <div className="lg:w-1/2 mt-4 lg:mt-0 space-y-2 text-right">
                         <p className="text-lg font-medium">
-                            Joined: <span className="font-normal">{data.shop?.createdAt?.slice(0, 10)}</span>
+                            Joined:{' '}
+                            <span className="font-normal">
+                                {data.shop?.createdAt
+                                    ? data.shop?.createdAt?.slice(0, 10)
+                                    : data.shop?.created_at?.slice(0, 10)}
+                            </span>
                         </p>
                         <p className="text-lg font-medium">
                             Number of products: <span className="font-normal">{products.length}</span>

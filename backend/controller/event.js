@@ -15,19 +15,16 @@ router.post(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const shopId = req.body.shopId;
-      const shop = await Shop.findById(shopId);
+      const shop = await Shop.findByPk(shopId);
       if (!shop) {
         return next(new ErrorHandler("Id cửa hàng không hợp lệ!", 400));
       } else {
         const files = req.files;
         const imageUrls = files.map((file) => `${file.filename}`);
-
         const eventData = req.body;
         eventData.images = imageUrls;
         eventData.shop = shop;
-
         const product = await Event.create(eventData);
-
         res.status(201).json({
           success: true,
           product,
@@ -38,14 +35,74 @@ router.post(
     }
   })
 );
-
+router.put(
+  "/update-event",
+  upload.array("images"),
+  catchAsyncErrors(async (req, res, next) => {
+    try {
+      const shopId = req.body.shopId;
+      const eventId = req.body.eventId;
+      const shop = await Shop.findByPk(shopId);
+      const event = await Event.findByPk(eventId);
+      if (!event) {
+        return next(new ErrorHandler("event không hợp lệ!", 400));
+      }
+      if (!shop) {
+        return next(new ErrorHandler("Id cửa hàng không hợp lệ!", 400));
+      }
+      const files = req.files;
+      const imageUrls = files.map((file) => `${file.filename}`);
+      const eventData = req.body;
+      eventData.images = imageUrls;
+      eventData.shop = shop;
+      event.name = eventData.name || event.name;
+      event.description = eventData.description || event.description;
+      event.category = eventData.category || event.category;
+      event.discountPrice = eventData.discountPrice || event.discountPrice;
+      event.start_Date = eventData.start_Date || event.start_Date;
+      event.Finish_Date = eventData.Finish_Date || event.Finish_Date;
+      event.originalPrice = eventData.originalPrice || event.originalPrice;
+      event.shopId = shopId;
+      event.images = eventData.images || event.images;
+      const product = await event.save();
+      res.status(201).json({
+        success: true,
+        product,
+      });
+    } catch (error) {
+      return next(new ErrorHandler(error, 400));
+    }
+  })
+);
 // get all events
+function isValidJSON(str) {
+  try {
+    JSON.parse(str);
+    return true; // Nếu không có lỗi, chuỗi là JSON hợp lệ
+  } catch (e) {
+    return false; // Nếu có lỗi, chuỗi không hợp lệ
+  }
+}
 router.get("/get-all-events", async (req, res, next) => {
   try {
-    const events = await Event.find();
+    const events = await Event.findAll({});
+    const updatedProducts = events.map((product) => {
+      const newProduct = product.toJSON();
+      if (typeof newProduct.images === 'string' && isValidJSON(newProduct.images)) {
+        newProduct.images = JSON.parse(newProduct.images);
+      }
+      if (typeof newProduct.shop === 'string' && isValidJSON(newProduct.shop)) {
+        newProduct.shop = JSON.parse(newProduct.shop);
+      }
+      if (typeof newProduct.tags === 'string' && isValidJSON(newProduct.tags)) {
+        newProduct.tags = JSON.parse(newProduct.tags);
+      }
+
+      return newProduct;
+    });
     res.status(201).json({
       success: true,
-      events,
+      events: updatedProducts,
     });
   } catch (error) {
     return next(new ErrorHandler(error, 400));
@@ -57,11 +114,24 @@ router.get(
   "/get-all-events/:id",
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const events = await Event.find({ shopId: req.params.id });
+      const events = await Event.findAll({ where: { shopId: req.params.id } });
+      const updatedProducts = events.map((product) => {
+        const newProduct = product.toJSON();
+        if (typeof newProduct.images === 'string' && isValidJSON(newProduct.images)) {
+          newProduct.images = JSON.parse(newProduct.images);
+        }
+        if (typeof newProduct.shop === 'string' && isValidJSON(newProduct.shop)) {
+          newProduct.shop = JSON.parse(newProduct.shop);
+        }
+        if (typeof newProduct.tags === 'string' && isValidJSON(newProduct.tags)) {
+          newProduct.tags = JSON.parse(newProduct.tags);
+        }
 
+        return newProduct;
+      });
       res.status(201).json({
         success: true,
-        events,
+        events: updatedProducts,
       });
     } catch (error) {
       return next(new ErrorHandler(error, 400));
@@ -76,9 +146,9 @@ router.delete(
     try {
       const productId = req.params.id;
 
-      const eventData = await Event.findById(productId);
-
-      eventData.images.forEach((imageUrl) => {
+      const eventData = await Event.findByPk(productId);
+      const ImageEvent = JSON.parse(eventData.images);
+      ImageEvent.forEach((imageUrl) => {
         const filename = imageUrl;
         const filePath = `uploads/${filename}`;
 
@@ -89,10 +159,12 @@ router.delete(
         });
       });
 
-      const event = await Event.findByIdAndDelete(productId);
+      const event = await eventData.destroy();
 
       if (!event) {
-        return next(new ErrorHandler("Không tìm thấy sự kiện với id này!", 500));
+        return next(
+          new ErrorHandler("Không tìm thấy sự kiện với id này!", 500)
+        );
       }
 
       res.status(201).json({
@@ -112,9 +184,7 @@ router.get(
   isAdmin("Admin"),
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const events = await Event.find().sort({
-        createdAt: -1,
-      });
+      const events = await Event.findAll({});
       res.status(201).json({
         success: true,
         events,

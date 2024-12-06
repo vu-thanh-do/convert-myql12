@@ -13,10 +13,8 @@ router.post(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { cart, shippingAddress, user, totalPrice, paymentInfo } = req.body;
-
       //   group cart items by shopId
       const shopItemsMap = new Map();
-
       for (const item of cart) {
         const shopId = item.shopId;
         if (!shopItemsMap.has(shopId)) {
@@ -24,17 +22,17 @@ router.post(
         }
         shopItemsMap.get(shopId).push(item);
       }
-
       // create an order for each shop
       const orders = [];
 
       for (const [shopId, items] of shopItemsMap) {
         const order = await Order.create({
           cart: items,
-          shippingAddress,
+          shipping_address: shippingAddress,
           user,
-          totalPrice,
+          total_price: totalPrice,
           paymentInfo,
+          
         });
         orders.push(order);
       }
@@ -54,13 +52,29 @@ router.get(
   "/get-all-orders/:userId",
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const orders = await Order.find({ "user._id": req.params.userId }).sort({
-        createdAt: -1,
+      const orders = await Order.findAll({
+        where: { "user.id": req.params.userId },
+      })
+      const updatedProducts = orders.map(product => {
+        const newProduct = product.toJSON(); 
+        newProduct.cart = JSON.parse(newProduct.cart);
+        newProduct.shipping_address = JSON.parse(newProduct.shipping_address);
+        newProduct.user = JSON.parse(newProduct.user);
+        newProduct.paymentInfo = JSON.parse(newProduct.paymentInfo);
+        return newProduct;
       });
+      const newUpdatedProducts = updatedProducts.map(product => ({
+        ...product,
+        shippingAddress: product.shipping_address,
+        totalPrice: product.total_price,
+        paidAt: product.paid_at,
+        deliveredAt: product.delivered_at,
+        createdAt : product.created_at
 
+      }));
       res.status(200).json({
         success: true,
-        orders,
+        orders :newUpdatedProducts,
       });
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
@@ -73,15 +87,33 @@ router.get(
   "/get-seller-all-orders/:shopId",
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const orders = await Order.find({
+      const orders = await Order.findAll({
         "cart.shopId": req.params.shopId,
-      }).sort({
-        createdAt: -1,
-      });
+      })
+      const updatedProducts = orders.map(product => {
+     
+        const newProduct = product.toJSON(); 
+        console.log( JSON.parse(newProduct.user),'newProduct')
+        newProduct.cart = JSON.parse(newProduct.cart);
+        newProduct.shipping_address = JSON.parse(newProduct.shipping_address);
+        // newProduct.shippingAddress = JSON.parse(newProduct.shipping_address);
+        newProduct.user = JSON.parse(newProduct.user);
+        newProduct.paymentInfo = JSON.parse(newProduct.paymentInfo);
 
+        return newProduct;
+      });
+      const newUpdatedProducts = updatedProducts.map(product => ({
+        ...product,
+        shippingAddress: product.shipping_address,
+        totalPrice: product.total_price,
+        paidAt: product.paid_at,
+        deliveredAt: product.delivered_at,
+        createdAt : product.created_at
+
+      }));
       res.status(200).json({
         success: true,
-        orders,
+        orders :newUpdatedProducts,
       });
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
@@ -95,14 +127,17 @@ router.put(
   isSeller,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const order = await Order.findById(req.params.id);
+      const order = await Order.findByPk(req.params.id);
 
       if (!order) {
-        return next(new ErrorHandler("Đơn hàng không tìm thấy với ID này", 400));
+        return next(
+          new ErrorHandler("Đơn hàng không tìm thấy với ID này", 400)
+        );
       }
       if (req.body.status === "Transferred to delivery partner") {
-        order.cart.forEach(async (o) => {
-          await updateOrder(o._id, o.qty);
+        const cartDataOrder = JSON.parse(order.cart) || '[]'
+        cartDataOrder.forEach(async (o) => {
+          await updateOrder(o.id, o.qty);
         });
       }
 
@@ -110,32 +145,27 @@ router.put(
 
       if (req.body.status === "Delivered") {
         order.deliveredAt = Date.now();
-        order.paymentInfo.status = "Succeeded";
-        const serviceCharge = order.totalPrice * 0.1;
-        await updateSellerInfo(order.totalPrice - serviceCharge);
+        const infoPayment = JSON.parse(order.paymentInfo)
+        infoPayment.status = "Succeeded";
+        const serviceCharge = order.total_price * 0.1;
+        console.log(123)
+        await updateSellerInfo(order.total_price - serviceCharge);
       }
-
       await order.save({ validateBeforeSave: false });
-
       res.status(200).json({
         success: true,
         order,
       });
-
       async function updateOrder(id, qty) {
-        const product = await Product.findById(id);
-
+        const product = await Product.findByPk(id);
         product.stock -= qty;
         product.sold_out += qty;
-
         await product.save({ validateBeforeSave: false });
       }
-
       async function updateSellerInfo(amount) {
-        const seller = await Shop.findById(req.seller.id);
-        
+        console.log(amount,'seller')
+        const seller = await Shop.findByPk(req.seller.id);
         seller.availableBalance = amount;
-
         await seller.save();
       }
     } catch (error) {
@@ -149,10 +179,12 @@ router.put(
   "/order-refund/:id",
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const order = await Order.findById(req.params.id);
+      const order = await Order.findByPk(req.params.id);
 
       if (!order) {
-        return next(new ErrorHandler("Đơn hàng không tìm thấy với ID này", 400));
+        return next(
+          new ErrorHandler("Đơn hàng không tìm thấy với ID này", 400)
+        );
       }
 
       order.status = req.body.status;
@@ -176,10 +208,12 @@ router.put(
   isSeller,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const order = await Order.findById(req.params.id);
+      const order = await Order.findByPk(req.params.id);
 
       if (!order) {
-        return next(new ErrorHandler("Không tìm thấy đơn đặt hàng với id này", 400));
+        return next(
+          new ErrorHandler("Không tìm thấy đơn đặt hàng với id này", 400)
+        );
       }
 
       order.status = req.body.status;
@@ -192,14 +226,15 @@ router.put(
       });
 
       if (req.body.status === "Refund Success") {
-        order.cart.forEach(async (o) => {
-          await updateOrder(o._id, o.qty);
+        const cartOrder = JSON.parse(order.cart)||'[]'
+        console.log(cartOrder,'cartOrder')
+        cartOrder.forEach(async (o) => {
+          await updateOrder(o.productId, o.quantity);
         });
       }
-
       async function updateOrder(id, qty) {
-        const product = await Product.findById(id);
-
+        const product = await Product.findByPk(id);
+        console.log(product,'product')
         product.stock += qty;
         product.sold_out -= qty;
 
@@ -215,16 +250,29 @@ router.put(
 router.get(
   "/admin-all-orders",
   isAuthenticated,
-  isAdmin("Admin"),
+  // isAdmin("Admin"),
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const orders = await Order.find().sort({
-        deliveredAt: -1,
-        createdAt: -1,
+      const orders = await Order.findAll({})
+      const updatedProducts = orders.map(product => {
+        const newProduct = product.toJSON(); 
+        newProduct.cart = JSON.parse(newProduct.cart);
+        newProduct.shipping_address = JSON.parse(newProduct.shipping_address);
+        newProduct.user = JSON.parse(newProduct.user);
+        newProduct.paymentInfo = JSON.parse(newProduct.paymentInfo);
+        return newProduct;
       });
+      const newUpdatedProducts = updatedProducts.map(product => ({
+        ...product,
+        shippingAddress: product.shipping_address,
+        totalPrice: product.total_price,
+        paidAt: product.paid_at,
+        deliveredAt: product.delivered_at,
+        createdAt : product.created_at
+      }));
       res.status(201).json({
         success: true,
-        orders,
+        orders :newUpdatedProducts,
       });
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));

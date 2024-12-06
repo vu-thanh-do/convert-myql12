@@ -25,7 +25,7 @@ const WithdrawMoney = () => {
     });
 
     useEffect(() => {
-        dispatch(getAllOrdersOfShop(seller._id));
+        dispatch(getAllOrdersOfShop(seller.id));
     }, [dispatch]);
 
     const handleSubmit = async (e) => {
@@ -93,7 +93,7 @@ const WithdrawMoney = () => {
         }
     };
 
-    const availableBalance = seller?.availableBalance.toFixed(2);
+    const availableBalance = Number(seller?.availableBalance)?.toFixed(2);
 
     return (
         <div className="w-full h-[90vh] p-8">
@@ -261,7 +261,7 @@ const WithdrawMoney = () => {
                                             <div className="800px:w-[50%]">
                                                 <h5>
                                                     Account Number:{' '}
-                                                    {'*'.repeat(seller?.withdrawMethod.bankAccountNumber.length - 3) +
+                                                    {'*'.repeat(seller?.withdrawMethod?.bankAccountNumber?.length - 3) +
                                                         seller?.withdrawMethod.bankAccountNumber.slice(-3)}
                                                 </h5>
                                                 <h5>Bank Name: {seller?.withdrawMethod.bankName}</h5>

@@ -16,7 +16,7 @@ const AdminDashboardMain = () => {
 
     const { adminOrders, adminOrderLoading } = useSelector((state) => state.order);
     const { sellers } = useSelector((state) => state.seller);
-
+    console.log(adminOrders,'adminOrdersadminOrders')
     useEffect(() => {
         dispatch(getAllOrdersOfAdmin());
         dispatch(getAllSellers());
@@ -66,13 +66,13 @@ const AdminDashboardMain = () => {
     adminOrders &&
         adminOrders.forEach((item) => {
             row.push({
-                id: item._id,
+                id: item.id,
                 itemsQty: item?.cart?.reduce((acc, item) => acc + item.qty, 0),
                 total: `${currency.format(item?.totalPrice, {
                     code: 'VND',
                 })}`,
                 status: item?.status,
-                createdAt: item?.createdAt.slice(0, 10),
+                createdAt: item?.createdAt?.slice(0, 10),
             });
         });
 

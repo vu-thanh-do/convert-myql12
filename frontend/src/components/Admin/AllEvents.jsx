@@ -70,7 +70,7 @@ const AllEvents = () => {
     events &&
         events.forEach((item) => {
             row.push({
-                id: item._id,
+                id: item.id,
                 name: item.name,
                 price: `${currency.format(item.discountPrice, {
                     code: 'VND',

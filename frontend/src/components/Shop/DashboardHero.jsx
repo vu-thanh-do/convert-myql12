@@ -20,11 +20,11 @@ const DashboardHero = () => {
     const { products } = useSelector((state) => state.products);
 
     useEffect(() => {
-        dispatch(getAllOrdersOfShop(seller._id));
-        dispatch(getAllProductsShop(seller._id));
+        dispatch(getAllOrdersOfShop(seller.id));
+        dispatch(getAllProductsShop(seller.id));
     }, [dispatch]);
-
-    const availableBalance = seller?.availableBalance.toFixed(2);
+    console.log( seller?.availableBalance,' seller?.availableBalance')
+    const availableBalance = Number(seller?.availableBalance)?.toFixed(2);
 
     const columns = [
         { field: 'id', headerName: 'Order ID', minWidth: 150, flex: 0.7 },
@@ -58,7 +58,7 @@ const DashboardHero = () => {
     orders &&
         orders.forEach((item) => {
             row.push({
-                id: item._id,
+                id: item.id,
                 itemsQty: item.cart.reduce((acc, item) => acc + item.qty, 0),
                 total: `${currency.format(item.totalPrice, { code: 'VND' })}`,
                 status: item.status,

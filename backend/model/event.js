@@ -1,65 +1,71 @@
-const mongoose = require("mongoose");
-
-const eventSchema = new mongoose.Schema({
-    name:{
-        type: String,
-        required:[true,"Please enter your event product name!"],
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const Event = sequelize.define(
+  "Event",
+  {
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
-    description:{
-        type: String,
-        required:[true,"Please enter your event product description!"],
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false,
     },
-    category:{
-        type: String,
-        required:[true,"Please enter your event product category!"],
+    category: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     start_Date: {
-        type: Date,
-        required: true,
-      },
-      Finish_Date: {
-        type: Date,
-        required: true,
-      },
-      status: {
-        type: String,
-        default: "Running",
-      },
-    tags:{
-        type: String,
+      type: DataTypes.DATEONLY,
+      allowNull: false,
     },
-    originalPrice:{
-        type: Number,
+    Finish_Date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
     },
-    discountPrice:{
-        type: Number,
-        required: [true,"Please enter your event product price!"],
+    status: {
+      type: DataTypes.STRING,
+      defaultValue: "Running",
     },
-    stock:{
-        type: Number,
-        required: [true,"Please enter your event product stock!"],
+    tags: {
+      type: DataTypes.STRING,
     },
-    images:[
-        {
-            type: String,
-        },
-    ],
-    shopId:{
-        type: String,
-        required: true,
+    originalPrice: {
+      type: DataTypes.DECIMAL(10, 2),
     },
-    shop:{
-        type: Object,
-        required: true,
+    discountPrice: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
     },
-    sold_out:{
-        type: Number,
-        default: 0,
+    stock: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
-    createdAt:{
-        type: Date,
-        default: Date.now(),
-    }
-});
-
-module.exports = mongoose.model("Event", eventSchema);
+    images: {
+      type: DataTypes.JSON,
+    },
+    shopId: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    shop: {
+      type: DataTypes.JSON,
+      allowNull: false,
+    },
+    sold_out: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+  },
+  {
+    tableName: "events",
+    timestamps: false,
+  }
+);
+module.exports = Event;

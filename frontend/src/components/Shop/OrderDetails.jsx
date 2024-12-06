@@ -15,14 +15,15 @@ const OrderDetails = () => {
     const dispatch = useDispatch();
     const [status, setStatus] = useState('');
     const navigate = useNavigate();
-
+    console.log(orders,'ordersordersorders')
     const { id } = useParams();
 
     useEffect(() => {
-        dispatch(getAllOrdersOfShop(seller._id));
-    }, [dispatch]);
+        dispatch(getAllOrdersOfShop(seller.id));
+    }, [dispatch,seller.id]);
 
-    const data = orders && orders.find((item) => item._id === id);
+    const data = orders && orders.find((item) => item.id == id);
+    console.log(data,'datadatadata')
 
     const orderUpdateHandler = async (e) => {
         await axios
@@ -53,7 +54,7 @@ const OrderDetails = () => {
             )
             .then((res) => {
                 toast.success('Order updated!');
-                dispatch(getAllOrdersOfShop(seller._id));
+                dispatch(getAllOrdersOfShop(seller.id));
             })
             .catch((error) => {
                 toast.error(error.response.data.message);
@@ -78,7 +79,7 @@ const OrderDetails = () => {
 
             <div className="w-full flex items-center justify-between pt-6">
                 <h5 className="text-[#00000084]">
-                    Order ID: <span>#{data?._id?.slice(0, 8)}</span>
+                    Order ID: <span># {data?.id}</span>
                 </h5>
                 <h5 className="text-[#00000084]">
                     Date: <span>{data?.createdAt?.slice(0, 10)}</span>

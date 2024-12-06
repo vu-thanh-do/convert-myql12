@@ -11,7 +11,7 @@ const AdminDashboardOrders = () => {
   const { adminOrders, adminOrderLoading } = useSelector(
     (state) => state.order
   );
-
+  console.log(adminOrders,'adminOrders')
   useEffect(() => {
     dispatch(getAllOrdersOfAdmin());
   }, []);
@@ -58,11 +58,11 @@ const AdminDashboardOrders = () => {
   adminOrders &&
     adminOrders.forEach((item) => {
       row.push({
-        id: item._id,
+        id: item.id,
         itemsQty: item?.cart?.reduce((acc, item) => acc + item.qty, 0),
         total: item?.totalPrice + " $",
         status: item?.status,
-        createdAt: item?.createdAt.slice(0,10),
+        createdAt: item?.createdAt?.slice(0,10),
       });
     });
   return (
